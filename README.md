@@ -10,6 +10,23 @@ A small D-Star voice terminal with a microphone, a speaker, and push-to-talk. Re
 
 ReflectorMic supports **REF (D-Plus), XRF (DExtra), DCS, and XLX through its DCS interface**. Reflector selection and settings are controlled through a local web interface. The speaker is predictably terrible because of its size. Voice is best effort; occasional audio gaps are possible. Other stations say it sounds great however.
 
+## Install ready-to-flash firmware
+
+Download **ReflectorMic-2026-11-01.2-factory.bin** from the [latest GitHub release](https://github.com/DrFrankReade/ReflectorMic/releases/latest). This combined image includes the bootloader, partition table, and application. No compilation is required. Use it only with the **M5Stack Atom VoiceS3R**.
+
+1. Connect the device to your computer using a USB data cable. Close other applications that are using its serial connection.
+2. Enter download mode: hold the side reset button for about two seconds until the internal green light appears, then release it. See [M5Stack's download-mode instructions](https://docs.m5stack.com/en/core/Atom_VoiceS3R).
+3. Open [Espressif ESP Tool](https://espressif.github.io/esptool-js/) in desktop Chrome or Edge. Connect and select the device. Choose **115200** baud if offered.
+4. For a first installation, erase the flash. **Erasing deletes saved Wi-Fi settings, station settings, and the uploaded reflector directory.** The factory image also replaces settings in the initial flash region; plan to repeat setup.
+5. Add the downloaded **factory.bin** file at flash address **`0x0`**, then program it. Leave flash-mode options at their image/default settings. Wait for completion before unplugging.
+6. Briefly press and release reset to start ReflectorMic. You should hear the boot beep. Follow **First-time setup** below, including uploading `DStar_Hosts.json`.
+
+If connection fails, re-enter download mode, reconnect the browser, and check the USB cable. Some browser flashers use a RAM upload stub that may not work reliably with this board; if flashing repeatedly disconnects, use Espressif's command-line esptool with `--no-stub` and 115200 baud.
+
+[ESPHome Web](https://web.esphome.io/) is another browser flasher to consider: connect, choose **Install**, and select the combined **factory.bin** image. Do not choose an option that installs ESPHome's own firmware. These are third-party tools; browser and board compatibility can vary. [ESP Web Tools](https://esphome.github.io/esp-web-tools/) is also suitable for building a dedicated installer, but its demonstration installer is not a ReflectorMic installer.
+
+The release also provides **ReflectorMic-2026-11-01.2-app.bin** for experienced users updating the existing ReflectorMic application at **`0x10000`** with the same partition layout. It is not a complete first-install image and must not be flashed at `0x0`. SHA-256 checksums are included with the downloads.
+
 ## First-time setup
 
 With ReflectorMic firmware installed:
@@ -57,7 +74,7 @@ The first active voice stream takes priority. Fast data, images, DPRS, and text 
 
 ## Local echo test
 
-Open **Setup & Diagnostics → Local echo test** and select **Arm echo test**.
+Open **Setup & Diagnostics â†’ Local echo test** and select **Arm echo test**.
 
 Arm the test, then hold PTT to record. Release PTT to finish encoding and hear the recording through the speaker.
 
@@ -67,7 +84,7 @@ Recordings are limited to **10 seconds**. Wait for processing and playback to fi
 
 ## Basic troubleshooting
 
-**Live status** shows the connection state, firmware build, and codec version. Under **Setup & Diagnostics → Receive troubleshooting**:
+**Live status** shows the connection state, firmware build, and codec version. Under **Setup & Diagnostics â†’ Receive troubleshooting**:
 
 - **Restart receive audio** restarts playback while keeping the reflector linked.
 - **Save RX diagnostic**, when available, saves a short receive capture for troubleshooting. Captures can contain received speech and station information; review them before sharing.
