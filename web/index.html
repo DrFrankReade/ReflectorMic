@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>ReflectorMic</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script type="module" src="/assets/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to controls</a>
+  <main id="main">
+    <header class="brand">
+      <div class="brand-title"><img class="logo" src="/assets/cat.png" width="64" height="64" alt="Black pixel cat"><div><h1>ReflectorMic</h1><p>D-Star voice terminal</p></div></div>
+      <div class="theme-control"><label for="theme">Appearance</label><select id="theme"><option value="light">Light</option><option value="dark">Dark</option></select></div>
+    </header>
+    <noscript><p class="notice">Enable JavaScript to view live status and operate the device.</p></noscript>
+    <p id="connectionStatus" class="notice" role="status">Connecting to the device…</p>
+    <div id="configError" class="notice" hidden><p id="configErrorText"></p><button id="retryConfig" type="button" class="secondary">Retry loading settings</button></div>
+    <div class="grid">
+      <section class="card" aria-labelledby="liveHeading">
+        <h2 id="liveHeading">Live status</h2>
+        <div class="status" role="status" aria-live="polite"><span id="dot" class="dot" aria-hidden="true"></span><span id="state">Starting…</span></div>
+        <dl class="kv"><dt>Wi-Fi</dt><dd id="wifi">—</dd><dt>IP address</dt><dd id="ip">—</dd><dt>Reflector</dt><dd id="target">—</dd><dt>Last heard</dt><dd id="heard">—</dd><dt>PTT</dt><dd id="ptt">—</dd></dl>
+        <dl class="kv versions"><dt>Build</dt><dd id="firmware">—</dd><dt>Codec</dt><dd id="codec">—</dd></dl>
+      </section>
+      <section class="card" aria-labelledby="reflectorHeading">
+        <h2 id="reflectorHeading">Reflector control</h2>
+        <form id="linkForm">
+          <div class="reflector-row"><div><label for="reflector">Reflector</label><input id="reflector" list="refs" maxlength="6" value="REF001" pattern="([Rr][Ee][Ff]|[Xx][Rr][Ff]|[Dd][Cc][Ss]|[Xx][Ll][Xx])[0-9A-Za-z]{3}" required autocapitalize="characters" spellcheck="false"><datalist id="refs"></datalist></div><div><label for="module">Module</label><select id="module"></select></div></div>
+          <div class="actions"><button id="link" type="submit">Link</button><button id="unlink" type="button" class="danger">Unlink</button><button id="search" type="button" class="secondary">Search directory</button></div>
+        </form>
+        <p class="note">REF · XRF · DCS · XLX (DCS interface)</p>
+        <p id="refstatus" class="note"></p><p id="searchStatus" class="note" role="status"></p>
+      </section>
+      <section class="card wide" aria-labelledby="stationHeading">
+        <h2 id="stationHeading">Station and audio</h2>
+        <form id="stationForm"><fieldset id="stationFields" disabled><legend class="sr-only">Station and audio settings</legend>
+          <div class="two"><div><label for="callsign">Licensed callsign</label><input id="callsign" maxlength="7" placeholder="N0CALL" required autocapitalize="characters" spellcheck="false"><label for="localModule">Local module</label><select id="localModule"></select><label for="suffix">MYCALL suffix</label><input id="suffix" maxlength="4" autocapitalize="characters" spellcheck="false"></div><div><label for="defaultReflector">Default reflector</label><input id="defaultReflector" maxlength="6" pattern="([Rr][Ee][Ff]|[Xx][Rr][Ff]|[Dd][Cc][Ss]|[Xx][Ll][Xx])[0-9A-Za-z]{3}" required autocapitalize="characters" spellcheck="false"><label for="defaultModule">Default module</label><select id="defaultModule"></select><label for="startup">Power-up linking</label><select id="startup"><option value="last">Last successful</option><option value="default">Configured default</option><option value="manual">Manual only</option></select></div></div>
+          <label for="timeout">PTT timeout (seconds)</label><input id="timeout" type="number" min="15" max="600" step="1" required inputmode="numeric">
+          <div class="two"><div><label for="volume">Speaker gain <output id="volumeValue" for="volume">160</output></label><input id="volume" type="range" min="8" max="255" step="1" value="160"></div><div><label for="micGain">Microphone gain <output id="micGainValue" for="micGain">1.00×</output></label><input id="micGain" type="range" min="0.25" max="4" step="0.05" value="1"></div></div>
+          <div class="actions"><button id="saveStation" type="submit">Save settings</button></div>
+        </fieldset></form>
+      </section>
+      <details id="setupDiagnostics" class="setup wide">
+        <summary>Setup &amp; Diagnostics</summary>
+        <div class="grid setup-content">
+      <section class="card wide" aria-labelledby="echoHeading">
+        <h2 id="echoHeading">Local echo test</h2>
+        <p id="echoStatus" class="note" role="status">Loading…</p>
+        <div class="actions"><button id="echo" type="button" disabled>Arm echo test</button><button id="speakerTest" type="button" class="secondary" disabled>Play speaker test tone</button></div>
+        <p class="note">Arm the test, then hold PTT to record. Release PTT to finish encoding and hear the recording through the speaker.</p>
+      </section>
+      <section class="card wide" aria-labelledby="rxHeading">
+        <h2 id="rxHeading">Receive troubleshooting</h2>
+        <p class="note">Restart receive audio if playback gets stuck or static appears. This briefly interrupts playback while keeping the reflector linked.</p>
+        <p id="diagnosticHelp" class="note" hidden>Diagnostics are enabled. Save the last 2.56 seconds of received data and decoded audio. Restarting receive audio also saves this recording.</p>
+        <p id="diagnosticDisabled" class="note">RX recording is available when device diagnostics are enabled.</p>
+        <div class="actions"><button id="rxRecover" type="button" class="secondary">Restart receive audio</button><button id="rxSave" type="button" class="secondary" hidden disabled>Save RX diagnostic</button></div>
+        <p id="rxStatus" class="note" role="status"></p>
+        <details id="diagnostics" hidden><summary>Detailed diagnostics</summary><p id="reflectorMedia" class="note"></p><p id="audioPlayback" class="note"></p><p id="codecPerformance" class="note"></p><p id="audioHardware" class="note"></p><p id="resetDiagnostic" class="note"></p><p id="resourceStatus" class="note"></p></details>
+      </section>
+      <section class="card wide" aria-labelledby="wifiHeading">
+        <h2 id="wifiHeading">Wi-Fi setup</h2>
+        <form id="wifiForm"><fieldset id="wifiFields" disabled><legend class="sr-only">Wi-Fi settings</legend>
+          <div class="two"><div><label for="ssid">Network</label><input id="ssid" list="networks" maxlength="32" autocomplete="off" spellcheck="false"><datalist id="networks"></datalist></div><div><label for="password">Password</label><input id="password" type="password" maxlength="64" autocomplete="new-password" aria-describedby="passwordHelp"><p id="passwordHelp" class="note">Leave blank to keep the saved password.</p></div></div>
+          <label for="open" class="check"><input id="open" type="checkbox"> Open network (no password)</label>
+          <div class="actions"><button id="scanWifi" type="button" class="secondary">Scan networks</button><button id="saveWifi" type="submit">Save and reboot</button></div>
+        </fieldset></form>
+        <p id="scanStatus" class="note" role="status"></p>
+        <p class="note">The device prefers this network at boot. If it cannot connect, the ReflectorMic setup access point returns while station retries continue.</p>
+      </section>
+      <section class="card wide" aria-labelledby="directoryHeading">
+        <h2 id="directoryHeading">Update DStar_Hosts.json</h2>
+        <p id="directoryStatus" class="note" role="status">Checking the installed directory…</p>
+        <form id="directoryForm"><label for="directoryFile">Local Pi-Star directory file</label><input id="directoryFile" type="file" required aria-describedby="directoryHelp"><div class="actions"><button id="uploadDirectory" type="submit">Upload directory</button></div></form>
+        <p id="directoryHelp" class="note">Download <a href="https://www.pistar.uk/downloads/" target="_blank" rel="noopener noreferrer">the Pi-Star directory (opens in a new tab)</a> to your computer, then select it here. Any filename is accepted; valid content is installed as DStar_Hosts.json. The device validates the file before replacing its directory. Maximum size: 1,250 KiB.</p>
+      </section>
+        </div>
+      </details>
+    </div>
+    <footer class="note">ReflectorMic · Local device controls</footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+</body>
+</html>

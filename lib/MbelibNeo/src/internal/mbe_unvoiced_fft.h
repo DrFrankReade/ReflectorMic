@@ -1,0 +1,197 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (C) 2025 by arancormonk <180709949+arancormonk@users.noreply.github.com>
+ *
+ * Internal header for FFT-based unvoiced synthesis.
+ * Implements TIA-102.BABA equations 117-126 for high-quality unvoiced audio.
+ */
+
+#ifndef MBEINT_MBE_UNVOICED_FFT_H
+#define MBEINT_MBE_UNVOICED_FFT_H
+
+#include <stdint.h>
+
+#include "mbelib-neo/mbelib.h"
+
+/* FFT size for unvoiced synthesis */
+#define MBE_FFT_SIZE 256
+/* The SSE2/NEON synthesis loops process four floats per step without a
+ * scalar tail, so the size must stay a multiple of four. */
+#if (MBE_FFT_SIZE % 4) != 0
+#error "MBE_FFT_SIZE must be a multiple of four for SIMD synthesis"
+#endif
+
+/* Scaling coefficient for unvoiced synthesis (Algorithm #120) */
+#define MBE_UNVOICED_SCALE_COEFF 146.17696f
+
+/* 256 / (2 * PI) constant for bin frequency calculation */
+#define MBE_256_OVER_2PI         (256.0f / (2.0f * 3.14159265358979323846f))
+
+/* LCG constants from TIA-102.BABA equation 117 */
+#define MBE_LCG_A                171.0f
+#define MBE_LCG_B                11213.0f
+#define MBE_LCG_M                53125.0f
+
+/* Default LCG seed from TIA-102.BABA Annex A */
+#define MBE_LCG_DEFAULT_SEED     3147.0f
+
+/* Noise buffer overlap size for continuity between frames */
+#define MBE_NOISE_OVERLAP        96
+
+/**
+ * @brief Opaque FFT plan handle for unvoiced synthesis.
+ */
+typedef struct mbe_fft_plan mbe_fft_plan;
+
+/**
+ * @brief Allocate an FFT plan for unvoiced synthesis.
+ *
+ * Creates a reusable plan for 256-point real FFT operations.
+ * Call mbe_fft_plan_free() when done.
+ *
+ * @return Allocated plan, or NULL on failure.
+ */
+mbe_fft_plan* mbe_fft_plan_alloc(void);
+
+/**
+ * @brief Free an FFT plan.
+ *
+ * @param plan Plan to free.
+ */
+void mbe_fft_plan_free(mbe_fft_plan* plan);
+
+/**
+ * @brief Forward 256-point real FFT using the plan's aligned scratch buffers.
+ *
+ * Input and output may be unaligned. Output contains DC at [0], Nyquist at
+ * [1], and interleaved real/imaginary bins 1..127 at [2..255]. The plan must
+ * not be used concurrently. No allocations occur during the transform.
+ * @return 0 on success, MBE_STATUS_INVALID_ARGUMENT for NULL arguments.
+ */
+int mbe_fft_forward_real(mbe_fft_plan* plan, const float input[MBE_FFT_SIZE], float output[MBE_FFT_SIZE]);
+
+/** Transform size of the autocorrelation plan: len + lags must not exceed it. */
+#define MBE_ACF_SIZE 512
+
+/**
+ * @brief Opaque plan for FFT autocorrelation of short real sequences.
+ */
+typedef struct mbe_acf_plan mbe_acf_plan;
+
+/**
+ * @brief Allocate an autocorrelation plan (512-point real FFT and buffers).
+ * @return Allocated plan, or NULL on failure.
+ */
+mbe_acf_plan* mbe_acf_plan_alloc(void);
+
+/**
+ * @brief Free an autocorrelation plan.
+ * @param plan Plan to free (NULL is ignored).
+ */
+void mbe_acf_plan_free(mbe_acf_plan* plan);
+
+/**
+ * @brief Autocorrelation r[lag] = sum_n x[n] x[n + lag] for lag = 0..lags.
+ *
+ * Computed through a zero-padded MBE_ACF_SIZE-point FFT, so it matches the
+ * direct sum up to floating-point rounding. No allocations occur.
+ * @return 0, or MBE_STATUS_INVALID_ARGUMENT for NULL pointers, a negative
+ *         count, lags of MBE_ACF_SIZE or more, or len + lags beyond
+ *         MBE_ACF_SIZE.
+ */
+int mbe_acf_compute(mbe_acf_plan* plan, const float* x, int len, float* r, int lags);
+
+/**
+ * @brief Generate LCG noise samples for unvoiced synthesis.
+ *
+ * Implements the TIA-102.BABA equation 117 linear congruential generator.
+ * Uses x' = (171*x + 11213) mod 53125.
+ *
+ * @param buffer Output buffer for noise samples.
+ * @param count Number of samples to generate.
+ * @param seed In/out LCG state.
+ */
+void mbe_generate_noise_lcg(float* buffer, int count, float* seed);
+
+/**
+ * @brief Seed the thread-local default LCG state for unvoiced noise.
+ *
+ * Applies to the next cold-start sequence in mbe_generate_noise_with_overlap().
+ *
+ * @param seed Thread-local seed value (0 maps to a fixed non-zero default).
+ */
+void mbe_seedUnvoicedNoiseLcg(uint32_t seed);
+
+/**
+ * @brief Generate the next overlapping 256-sample noise buffer.
+ *
+ * State is encoded in existing public fields to preserve ABI:
+ * - overlap[0..95] stores current buffer samples [0..95]
+ * - seed stores the current tail generator state for samples [96..255]
+ *
+ * Library cold-start policy: seed < 0 emits an all-zero buffer,
+ * then primes state for the next call with MBE_LCG_DEFAULT_SEED.
+ *
+ * @param buffer Output buffer of 256 samples.
+ * @param seed In/out LCG state.
+ * @param overlap In/out 96-sample head/tail state buffer.
+ */
+void mbe_generate_noise_with_overlap(float* buffer, float* seed, float* overlap);
+
+/**
+ * @brief Synthesize unvoiced speech using FFT method.
+ *
+ * Implements TIA-102.BABA equations 117-126:
+ * - Generate noise buffer (with overlap continuity)
+ * - Apply synthesis window
+ * - FFT -> scale unvoiced bins -> IFFT
+ * - WOLA combine with previous frame
+ *
+ * @param output Output buffer of 160 samples (added to existing content).
+ * @param cur_mp Current frame parameters.
+ * @param prev_mp Previous frame parameters (provides previousUw for WOLA).
+ * @param plan FFT plan (reusable).
+ */
+void mbe_synthesizeUnvoicedFFT(float* output, mbe_parms* cur_mp, const mbe_parms* prev_mp, mbe_fft_plan* plan);
+
+/**
+ * @brief Synthesize unvoiced speech using a pre-generated noise buffer.
+ *
+ * Same as mbe_synthesizeUnvoicedFFT but uses the provided noise buffer
+ * instead of generating new noise. The caller controls per-frame noise
+ * consumption independently of the other synthesis stages.
+ *
+ * @param output Output buffer of 160 samples (added to existing content).
+ * @param cur_mp Current frame parameters.
+ * @param prev_mp Previous frame parameters (provides previousUw for WOLA).
+ * @param plan FFT plan (reusable).
+ * @param noise_buffer Pre-generated 256-sample noise buffer.
+ */
+void mbe_synthesizeUnvoicedFFTWithNoise(float* output, mbe_parms* cur_mp, const mbe_parms* prev_mp, mbe_fft_plan* plan,
+                                        const float* noise_buffer);
+
+/**
+ * @brief Look up the shared synthesis window at an offset from its center.
+ *
+ * The window is defined for indices -105 to +105.
+ * Returns 0 for out-of-range indices.
+ *
+ * @param n Sample index relative to center.
+ * @return Window value at index n.
+ */
+float mbe_synthesisWindow(int n);
+
+/**
+ * @brief Apply WOLA (Weighted Overlap-Add) to combine frames.
+ *
+ * Implements Algorithm #126 to smoothly combine previous and current
+ * frame outputs.
+ *
+ * @param output Output buffer of N samples.
+ * @param prevUw Previous frame's inverse FFT output (256 samples).
+ * @param currUw Current frame's inverse FFT output (256 samples).
+ * @param N Frame length (typically 160).
+ */
+void mbe_wola_combine(float* output, const float* prevUw, const float* currUw, int N);
+
+#endif /* MBEINT_MBE_UNVOICED_FFT_H */

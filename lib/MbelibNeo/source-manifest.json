@@ -1,0 +1,367 @@
+{
+  "candidate": "R13 PR cleanup 2026-10-29",
+  "files": [
+    {
+      "source_sha256": "2a9c0a39841941a40c30444f535091e53f3a6729acf916f8e998c912f5d79ccb",
+      "local_sha256": "e61d13c4be884879a89b66c152b0fd683decefaeedebb0f8cf868d917a381b9a",
+      "path": "src/ambe/ambe_common.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "278c3b8806869f2d880b47b08e4127e912df2cac916437064eeb38f47a71db22",
+      "local_sha256": "18673af4c0eb4a12f4ebcdf99f2fceb6b2033d10a5c3d4ff499658134466d76e",
+      "path": "src/ambe/ambe_encoder.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "24bc32d9f2586ef88b90119d8ede1dfa409c32937111ad36e2b1bbe3be5ab80b",
+      "local_sha256": "6855987709f53f5d83c57b0c6944aff21464db3ce00076b32c1bb3e628c1d003",
+      "path": "src/ambe/ambe3600x2400_enc.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "5227fd2b878244247af9e31cb75847a3b13ec1ee55512667a12423197aea1648",
+      "local_sha256": "a7ea7ed36df6c409c57eb6d8f1261b37ad1505ee223ccd2223a99db184df584f",
+      "path": "src/ambe/ambe3600x2400.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "5f295fe9135c27f8fd941beb1481fe481d5197f53de9399897d84363dee63e97",
+      "local_sha256": "96bc3ec03ef8c8d4a6c8b0f9fdcc8c0e5651ae68c9d60e81cd1b5c5e089baf65",
+      "path": "src/ambe/ambe3600x2450_enc.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "324b3a61d29172c65b0565a08f43af6980666dc53b91e9b75aba32ef26eede9b",
+      "local_sha256": "d5226a009968ecceb84e3e907e936d73fb578d1db9150d07a27b33c8156c01fc",
+      "path": "src/ambe/ambe3600x2450.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "abf1dd90b72fefcdc379b1664be04b5586fbab8efa1ecc8e0eeacfc9e3c0517a",
+      "local_sha256": "8ff531e68189c6b9f30d17e4e9ab20de40e4ea03766963333573513f07e00577",
+      "path": "src/ambe/dstar_frame.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "462e5febce8e1e0abe0d2bfadd5223745d9d4dad7a5de1480c471f51a4cace95",
+      "local_sha256": "65558cf3099cb9830d936c1dfabaea6eb1d12dcaed9d493d1876e2df6b6f9693",
+      "path": "src/core/mbe_adaptive.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "760da8e024cc4714a48d62a413363243e476bd6fea34625e5c7e2c488e6d6b01",
+      "local_sha256": "f231cd4108713d89b4ca5ce87c0048b597560917a52f9161e46d4d882b892049",
+      "path": "src/core/mbe_cpu.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "a971eb575b43da34214f32ebe3317df55d135104f6f9b089641cf4c7c168466b",
+      "local_sha256": "4750a4c57f12051f8c0afe911a1becd4cb47d2c1fc0e6b619b10045f884a025e",
+      "path": "src/core/mbe_encoder.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "68aed0aa333d045f96541b3c719e910ec98db914056a35c4b9defa6bcc8ad7e8",
+      "local_sha256": "428cf7ca484d4d7d68ded6a4c536a4012ef51fcb70d9c3d401e18bd9f364f1b5",
+      "path": "src/core/mbe_pcm_convert.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "c0e41864217594060cdd4577bdf45fb1c9c0737f163a271a6e70aaf25ed7a874",
+      "local_sha256": "15c609799497145625a85899f98134cee1238a34f4f208e775dad7bb62def040",
+      "path": "src/core/mbe_speech_analysis.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "66d15da41328a9d3b93c85a73f69449a69ecf7b47e67add5c5bf1f611a95fe03",
+      "local_sha256": "55c2ccc77ec90b4ac405380816b1a4e9efcc451bc427bd1e84d38b6c487729fc",
+      "path": "src/core/mbe_tone_detect.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "618a54b1693547a0b858a63c9d84a829be07985db279112b02383d8b4ab7bbd3",
+      "local_sha256": "9b1e8b7f1c9b0075a60f0b4798f097b4934ef630e182a91341c6c8e487b2169c",
+      "path": "src/core/mbe_tone_fit_avx2.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "b7b614ebd87a39fc2ab64010acd85145e1fdec5880d5764c18f1785fad22b457",
+      "local_sha256": "93e96147af392ef69bab7c3364e0ca86947380706ecda396c6ca1d4810bd89a1",
+      "path": "src/core/mbe_tone_fit.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "0a23c420e325a41ba6b8c56ce3f56a748a88a0671a49fb8e7e38af23ebe76f99",
+      "local_sha256": "118130a62af488e8c79d08e8104ec369ef22066a6f40c6cb19833ad2b06da978",
+      "path": "src/core/mbe_unvoiced_fft.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "4eaba75f861356fb6325c63ab0a6e2cde486868d015618162af9a13fd066819c",
+      "local_sha256": "2c841eb6d8f0090c0000bd06b6372d1d4b603d78407ecd13046b9276d109ef02",
+      "path": "src/core/mbe_voiced_avx2.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "04a75c989e347f9d626e539465e0777b7916eab6f95860b99d8d6c6893029670",
+      "local_sha256": "30d25c7a5268767cd3a6e5aa330e5c49d7fd91a5539e3c3d68fce883eda9412e",
+      "path": "src/core/mbe_voiced.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "aa650f6bd13d89eb31810fcfb532dc76ecbba2d0889591255c209fa46358d9b6",
+      "local_sha256": "30f3b50617c859c0a016ae7a4e8733359afaca47df57a21b37e8eb9a5bcedf0b",
+      "path": "src/core/mbelib.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "2c8365cfc5ab8474cd9de3c86f21a70e7a6674d9e0058687a0a8ee89e2cc6752",
+      "local_sha256": "f3e8ae3d16cabdd183b388fa178512c12b864a52efbc46b4a63de01f72be4d4e",
+      "path": "src/ecc/ecc_const.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "78b7449d397fd86c8313f5cd0a08870f567f72cd5669f2bab69652a92ebffb3c",
+      "local_sha256": "6b80d2dadc4b17821bd8eab560659356fc059d2f8216be19829d9c32bf6e37ca",
+      "path": "src/ecc/ecc_soft_search_avx2.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "4397699c567018467a50a98b9f45a35296f8ae8ab0ef0c2011fab1168a1763b0",
+      "local_sha256": "5eb61465d5122df75c4fbb5daeabef288f0acf0dcec5b3a0ebe4f6f7d1c1e4c9",
+      "path": "src/ecc/ecc_soft_search.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "f807fb6d308a61eaa4e2979507fdad34677da889094cf42b162696f73edbad20",
+      "local_sha256": "b51cd6a4941d57877ad3735f141fc8d99d7881cac6ed9048d8496757bfc29b94",
+      "path": "src/ecc/ecc_soft.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "6c98e3e807fa8a4f72813cc132fdd5bc3b4f03a181d263447af7b3f8dfac18db",
+      "local_sha256": "d375cd63d21d0742fadefeeefa453b21b6400981aced72a2e102bd6156953a70",
+      "path": "src/ecc/ecc.c",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "4934674d147902502bf3ef5c520d21b442696a4060eab13cc358e21c00733194",
+      "local_sha256": "a2019a3fecf72f508fe82d3e35996b0b45023adcb168a22cc3c65eb044d484d5",
+      "path": "src/internal/ambe_common.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "506d22ddbe64106ad86fcafb31989871f4bee536636b597bec4b4b8a3c6880b1",
+      "local_sha256": "11e000b7695cf7e75438ed7f80f184f95d8dbd7609e302435559f81238231fa2",
+      "path": "src/internal/ambe_encoder.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "315994bd2fc5627a87220006d9a4e98595f8476794fa8f712ec1db7ca3400458",
+      "local_sha256": "9ead38033cbff4154c83ff20b22a7b2624411e9b0029658954749830058c8cd3",
+      "path": "src/internal/ambe3600x2400_const.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "57727916b66ef9426584fa200f5b24696aa7ad61b13101cd46afe98554709709",
+      "local_sha256": "327630b7dff81a72dfecda2ebab52cb7f95cf29af3de8d81b1a54470e81bea1d",
+      "path": "src/internal/ambe3600x2400_internal.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "ff91d9603ff2ffc9b866b5e8044456a43184f111606bee33af7b981043591bd1",
+      "local_sha256": "2aee8eb7101db821fadbf4a83231a4e1b5f8a12496beb39eccad1b73d151dc10",
+      "path": "src/internal/ambe3600x2450_const.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "a7fbdbf808c0ba49d620a92cf72e94573cd8a7710ccbcfa2c58d536d2fab92e5",
+      "local_sha256": "10266e31f2c1f6a46331f277b94330f57d5007650679d81bc7538589bc668848",
+      "path": "src/internal/ambe3600x2450_internal.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "706ac9f406e696af83bc96c70e9e8f88edafff22531f966223ba29ad13f8e187",
+      "local_sha256": "89db1b87ba7574a730060bb4000f9e3db59825dc008c762b37f302b3bac73c89",
+      "path": "src/internal/ecc_const.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "0b48ce638a43a59472acf860972db4aee14b446506e37ad970dbe71667c1d407",
+      "local_sha256": "226da6f4ad66d11cc35a0f4f140db5895d90775418debd498e2ce94ee991cd89",
+      "path": "src/internal/imbe4400_internal.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "caad392c997bf4873a4a72e34832824380ed747b6592c192ba7ffc54f190a379",
+      "local_sha256": "2910519777978a33b02e9f0eb610912db4d7ea3472e26786f0f98c5022c292da",
+      "path": "src/internal/imbe7200x4400_const.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "8177a4e5973adaecd545e345e8d6b9cb95335fa3de3854c36b5e9998708d2457",
+      "local_sha256": "d61b0e8d77bd9d8dbe0660e94a1c25b8f971be642fce03eeffd16e825ed5a2d9",
+      "path": "src/internal/mbe_adaptive.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "9ce9fdf7f5c8868d3a9ffb6044e81b5421c2b8f2336ed0df696a39c53827f59c",
+      "local_sha256": "e1908ab4e7598407f5bf5ba40e62f3dd39bf0a98f76c53cd9579aa1e59771914",
+      "path": "src/internal/mbe_bitpack.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "984e959e61697f60a684759b4b10558959163efb1438e4b1fe7de828c3bbf1f8",
+      "local_sha256": "64f9d3917db4f311c3edf5c1e82e30f047bb875cdb4c83aa8619d3bdce095a8c",
+      "path": "src/internal/mbe_compiler.h",
+      "matches_normalized": false
+    },
+    {
+      "source_sha256": "d1caeec304bdeae55a6958cb57e419dcb177763238571a413489518e9f84e75b",
+      "local_sha256": "8f484b4fd5e201112df39d8a80e46c2aec3fb7d00dc33788c8b549f605c335ab",
+      "path": "src/internal/mbe_cpu.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "a1277152692b93f73bfb89ef1dd560abe5a37b64e0cea0fdbe77bcc2dc275c47",
+      "local_sha256": "b5cf129888104634d5bc7130bf12dda7fd74432cf7a11af020d1c99eb34d55eb",
+      "path": "src/internal/mbe_ecc_codebooks.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "06070546743899b28e5895af16b2beb38e3c80e6fa8913b2ed0b80362ae5015c",
+      "local_sha256": "f061642ce56c2da2b87df1501f8c472acdcb43de43d6218d9999d5e45728901f",
+      "path": "src/internal/mbe_ecc_soft_search.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "327e4273608add14eeb9fbae4657aefe1e30d7b6252f65bfba143a168135590a",
+      "local_sha256": "f17d87cab4a1351e02f40293b8168f769ebe2d7aa737a61bbcc4ab318c1049ea",
+      "path": "src/internal/mbe_ecc.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "ad8aab8ea633ebdbba105b1d5df7fc8614441fee2f7f66afed01fdd4afe8454c",
+      "local_sha256": "2eb06ce112548e9c0ad0c48d9245ffdc6733b6f3728bd32cdaa7c39cf562e194",
+      "path": "src/internal/mbe_encoder.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "f44e2e4ba7716626b6e3268b3a156813d234fd8e4d385a0db66dbbd63886052c",
+      "local_sha256": "ac21b13e2c7b224eec908c4f921209edd6ef320148865cdc063c8000e8999e2f",
+      "path": "src/internal/mbe_fixed_point.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "919e010c574c248d49823a87c4be525ada3f00b8754728fed202fba4a199aafe",
+      "local_sha256": "2671f8cb1f7deb412a6edfe872d6beca787358b40e51541ad5d81cb26ec9eb5e",
+      "path": "src/internal/mbe_math.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "e8dd5152c9ac00c56c268c5a1e5283f661c1d474cc1bde94c307cb9eed5dba69",
+      "local_sha256": "5361c8dd6132de68971227c8ca87e360a871886a7a8f1331a61eb539c3cf484a",
+      "path": "src/internal/mbe_repeat.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "2a137021186fd2ab4e111d08326f31a677233dfbcab9081248f0aec6d13c9638",
+      "local_sha256": "b84746bfb1b82a4b1ea09fdb78a0033fb21e277f3b6d4bbd8b4e001c94c9e872",
+      "path": "src/internal/mbe_result.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "ad72ccba9c2d731c7f74d0151939def8f2971db9e6b0fc2b57d44e21416aa8d3",
+      "local_sha256": "3723d102cb44017cc0ddcf0d34c8db87afcb7360c3a86caabb0fec258bdd8ea0",
+      "path": "src/internal/mbe_simd.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "a2e0669eeed69c2c5d807e72e58a112ab3d65e77ff4f870bf947dd98df542460",
+      "local_sha256": "d3151f5bbe821c6416947f4263266b6c2e9369cd6c35ad3e0a5161e71f7c7836",
+      "path": "src/internal/mbe_speech_analysis.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "b3c833944cdb483e0cc3b8eeb16dc3749ef3ea795250d0393d8685aa39486fd1",
+      "local_sha256": "d98fa17b7399455d71e870b8ab3e576a5d71248c283c17b5e203ec20f0e14684",
+      "path": "src/internal/mbe_tone_detect.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "ec3781a96a526b8391968b623acbc1869701d6e48acb63ec8b9247e56d96f743",
+      "local_sha256": "0aaab3ee6659c7a1c4c551ae2897a771ac1211b66a3e9681e021de621302826e",
+      "path": "src/internal/mbe_tone_fit.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "d5d0c0d9ea6a5af4f2bf19f7a4bbc89dddadc23769d4fbe38a471dbafc3791a2",
+      "local_sha256": "1ec1e8d8a29d7387616f75db8e013ad44c7d9d05143c3ddacbe98c133c07211f",
+      "path": "src/internal/mbe_tone.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "706b69c5f6aa09a25686b8f36b3a5a5f47b863b5d1badf9adf189fdb65c83c1f",
+      "local_sha256": "1af511bd06382490545ddfc0590b80ce24baba27573e5be465d7f239dbd8ca35",
+      "path": "src/internal/mbe_unvoiced_fft.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "b0c974afca96aba6837c27937552021e92d46ba29bf18237bdffacd1f87e2b04",
+      "local_sha256": "61ede5ed9053dd1a6417ceb0faba8ffb7116f2fd290da9805b1f8c182f7e269e",
+      "path": "src/internal/mbe_validation.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "fe031e04ac345e085a29a53cf27d273f892b1fed47ce5672a18a5871297cd349",
+      "local_sha256": "1afb2b8294c75cbe381c6cedd636b331f07576a4c6d6efc988eb1901304514d0",
+      "path": "src/internal/mbe_voiced.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "30146c391e78b939fff7ca7685be2b1d6d746839bd77da88512fe80fc0d3ebab",
+      "local_sha256": "fc05b7c0c1da1e5521d887e721c3dd4a685b05134e8e4570eac5715bd62213eb",
+      "path": "src/internal/mbelib_const.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "456bd2423f53aba68ed2ad9ebc61e3dec2eb9c645c2be81874d12fe7c5a8655d",
+      "local_sha256": "42af7d3bdb14db08d8daa880e19df795ae33f3f86cabd6789b1cb9273553af32",
+      "path": "src/internal/tetra_acelp_codebooks.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "55d9060fa345a47e9e54138ede9f9fed6ae404202cf2c5bee6528e550e93d598",
+      "local_sha256": "6d507965b71dab33264236f85858376c4c22019020e41acfcd32deff8d040ca9",
+      "path": "src/internal/tetra_acelp_constants.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "04cfc514a43042d06d983d88c26de74ca752a9f8652ef49eec8b27dfc0d57926",
+      "local_sha256": "46d649c305686be68291150d65c2616375cb3fdd3f416318294719a55f283abf",
+      "path": "src/internal/tetra_acelp.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "857b041974d8742496ad02f79fa0a7b7d285ab836c9f82feda7aa4acfa495243",
+      "local_sha256": "def86d7d6f255244e7d7447750ed5610bad7c39e34ba30459f7f286b6d093d59",
+      "path": "src/internal/tetra_simd.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "ce14d7bccb5f499f47346f75292a482f80bad6e2e989500cf2f92b37ee6915e0",
+      "local_sha256": "6d4683679275780e0eb2b76629a65f4887033ebabdc8be1f2410a1d9be9868c7",
+      "path": "include/mbelib-neo/mbelib.h",
+      "matches_normalized": true
+    },
+    {
+      "source_sha256": "67b78fb62a8d0086eb336c7508cdf1f1cf4d7589b76842ad671e0db6a8b3077c",
+      "local_sha256": "d4c4b306dab03a1ca84c808901fecb2971acb017a219c082ab7af1b8be9f4dd2",
+      "path": "include/mbelib-neo/version.h.in",
+      "matches_normalized": true
+    }
+  ],
+  "commit": "a3c7bbdae9eb21cbfab57006c1a5daca7bdcba7f",
+  "upstream": "MBELIB-neo 2.6.2, R13 D-Star source snapshot"
+}

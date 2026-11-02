@@ -1,0 +1,14 @@
+{
+  "name": "MbelibNeo",
+  "version": "2.6.2-r13",
+  "description": "MBELIB-neo R13 D-Star encoder and decoder",
+  "build": {
+    "extraScript": "build.py",
+    "flags": [
+      "-O3",
+      "-DMBE_STATIC=1",
+      "-DPFFFT_STATIC_DEFINE",
+      "-DPFFFT_SIMD_DISABLE=1"
+    ]
+  }
+}
