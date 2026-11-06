@@ -184,10 +184,12 @@ void AudioEngine::beginReceiveStream() {
   rxStreamActive_ = true;
 }
 
-bool AudioEngine::submitReceivedFrame(const uint8_t *ambe) {
+bool AudioEngine::submitReceivedFrame(const uint8_t *ambe, bool live) {
   if (!rxQueue_ || txRequested_ || !rxStreamActive_) return false;
   RxItem item{};
   item.type = RxItemType::Frame;
+  item.queuedMs = millis();
+  item.live = live;
   memcpy(item.ambe, ambe, sizeof(item.ambe));
   if (xQueueSend(rxQueue_, &item, 0) == pdTRUE) {
     receivedFrames_++;

@@ -2,7 +2,9 @@
 #include <cstdint>
 namespace audio_settings {
 constexpr uint32_t SAMPLE_RATE = 8000;
-constexpr uint8_t RX_QUEUE_FRAMES = 32;
+constexpr uint8_t RX_QUEUE_FRAMES = 16;
+// Stale queued speech must not survive a decoder/speaker stall.
+constexpr uint32_t RX_QUEUE_MAX_AGE_MS = 240;
 constexpr uint8_t TX_QUEUE_FRAMES = 16;
 constexpr uint8_t AUDIO_CODEC_CORE = 0;
 constexpr uint8_t AUDIO_CODEC_PRIORITY = 2;

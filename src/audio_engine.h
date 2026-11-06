@@ -51,7 +51,7 @@ class AudioEngine {
   String hardwareDiagnostic() const { return hardware_.diagnostic(); }
 
   void beginReceiveStream();
-  bool submitReceivedFrame(const uint8_t ambe[DSTAR_AMBE_BYTES]);
+  bool submitReceivedFrame(const uint8_t ambe[DSTAR_AMBE_BYTES], bool live = true);
   // Returns false only when the end marker could not yet be queued. Callers
   // that generate audio faster than real time can retry on their next pass.
   bool endReceiveStream();
@@ -66,6 +66,8 @@ class AudioEngine {
   enum class RxItemType : uint8_t { Frame, Start };
   struct RxItem {
     RxItemType type;
+    uint32_t queuedMs = 0;
+    bool live = true;
     uint8_t ambe[DSTAR_AMBE_BYTES];
   };
   struct TxItem {

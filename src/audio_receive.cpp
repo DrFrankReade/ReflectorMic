@@ -67,7 +67,16 @@ void AudioEngine::processReceiveItem(const RxItem& item) {
     playbackFrames_ = 0;
     return;
   }
-  if (!txRequested_ && awaitPlaybackSlot()) decodeReceivedFrame(item);
+  // Check both sides of speaker backpressure: an item may become stale while
+  // waiting for a playback buffer. Only this worker consumes/discards RX items.
+  if (item.live && millis() - item.queuedMs > RX_QUEUE_MAX_AGE_MS) {
+    ++receivedQueueDrops_;
+    return;
+  }
+  if (!txRequested_ && awaitPlaybackSlot()) {
+    if (item.live && millis() - item.queuedMs > RX_QUEUE_MAX_AGE_MS) ++receivedQueueDrops_;
+    else decodeReceivedFrame(item);
+  }
 }
 
 bool AudioEngine::awaitPlaybackSlot() {

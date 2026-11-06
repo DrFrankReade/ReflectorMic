@@ -3,9 +3,9 @@
 
 // Application identity is separate from mbe_versionString() in the codec.
 #if !REFLECTORMIC_DIAGNOSTICS
-static constexpr const char *REFLECTORMIC_FIRMWARE = "ReflectorMic 2026-11-01.2 lean";
+static constexpr const char *REFLECTORMIC_FIRMWARE = "ReflectorMic 2026-11-06.1 lean";
 #elif defined(REFLECTORMIC_ENCODER_PROFILE)
-static constexpr const char *REFLECTORMIC_FIRMWARE = "ReflectorMic 2026-11-01.2 profile";
+static constexpr const char *REFLECTORMIC_FIRMWARE = "ReflectorMic 2026-11-06.1 profile";
 #else
-static constexpr const char *REFLECTORMIC_FIRMWARE = "ReflectorMic 2026-11-01.2";
+static constexpr const char *REFLECTORMIC_FIRMWARE = "ReflectorMic 2026-11-06.1";
 #endif

@@ -15,7 +15,8 @@ public:
   };
   void reset();
   bool push(uint8_t sequence, const uint8_t frame[12], uint32_t now);
-  bool pop(uint32_t now, Block &out, bool ending = false);
+  bool pop(uint32_t now, Block &out, bool ending = false,
+           uint32_t reorderWaitMs = 60);
 
 private:
   struct Slot {

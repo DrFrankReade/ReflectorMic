@@ -56,6 +56,8 @@ void ReflectorMicWebServer::appendReflectorCounters(String &out) const {
   out += "\"rxDrops\":" + String(reflector_->droppedRxFrames()) + ',';
   out += "\"rxConcealedFrames\":" + String(reflector_->concealedRxFrames()) + ',';
   out += "\"rxReceivedNullFrames\":" + String(reflector_->receivedNullFrames()) + ',';
+  out += "\"rxJitterTargetMs\":" + String(reflector_->jitterTargetMs()) + ',';
+  out += "\"rxJitterRefills\":" + String(reflector_->jitterRefills()) + ',';
   out += "\"rxJitterResyncs\":" + String(reflector_->jitterResyncs()) + ',';
   out += "\"rxFastDataFrames\":" + String(reflector_->fastDataFrames()) + ',';
   out += "\"rxUnclassifiedFrames\":" + String(reflector_->unclassifiedFrames()) + ',';

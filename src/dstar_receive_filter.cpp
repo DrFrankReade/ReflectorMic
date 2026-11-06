@@ -2,7 +2,6 @@
 #include <cstring>
 
 namespace {
-constexpr uint32_t REORDER_WAIT_MS = 60;
 constexpr uint8_t SYNC[3] = {0x55, 0x2d, 0x16};
 } // namespace
 
@@ -67,7 +66,7 @@ bool DStarReceiveFilter::push(uint8_t sequence, const uint8_t frame[12],
   return true;
 }
 
-bool DStarReceiveFilter::pop(uint32_t now, Block &out, bool ending) {
+bool DStarReceiveFilter::pop(uint32_t now, Block &out, bool ending, uint32_t reorderWaitMs) {
   if (next_ < 0 || next_ > highest_)
     return false;
   const uint8_t sequence = next_ % 21;
@@ -76,8 +75,12 @@ bool DStarReceiveFilter::pop(uint32_t now, Block &out, bool ending) {
   for (uint8_t i = 0; i < count; ++i)
     if (slots_[(next_ + i) % 21].index == next_ + i)
       present |= 1U << i;
-  if (present != (1U << count) - 1 && !ending && highest_ < next_ + count + 3 &&
-      now - waitingSince_ < REORDER_WAIT_MS)
+  // The active voice stream borrows its adaptive playout budget to allow
+  // reordering before classification irreversibly discards an incomplete block.
+  const uint32_t waitMs = reorderWaitMs > 240 ? 240 : reorderWaitMs;
+  const int32_t lookahead = waitMs / 20 > 3 ? waitMs / 20 : 3;
+  if (present != (1U << count) - 1 && !ending && highest_ < next_ + count + lookahead &&
+      now - waitingSince_ < waitMs)
     return false;
   out = Block{};
   out.sequence = sequence;

@@ -9,6 +9,7 @@
 #include "dstar_receive_filter.h"
 #include "reflector_directory.h"
 #include "reflector_protocol.h"
+#include "rx_jitter_policy.h"
 
 enum class ReflectorState : uint8_t {
   WifiDown,
@@ -63,6 +64,8 @@ class ReflectorClient {
   uint32_t droppedRxFrames() const { return droppedRxFrames_; }
   uint32_t concealedRxFrames() const { return concealedRxFrames_; }
   uint32_t receivedNullFrames() const { return receivedNullFrames_; }
+  uint32_t jitterTargetMs() const { return jitterPolicy_.targetFrames() * 20U; }
+  uint32_t jitterRefills() const { return jitterPolicy_.refills(); }
   uint32_t jitterResyncs() const { return jitterResyncs_; }
   uint32_t fastDataFrames() const { return fastDataFrames_; }
   uint32_t unclassifiedFrames() const { return unclassifiedFrames_; }
@@ -133,6 +136,7 @@ class ReflectorClient {
                      uint16_t streamId);
   void queueIncomingFrame(const uint8_t ambe[9], uint8_t sequence);
   void trimJitterWindow(int32_t newestIndex);
+  void discardJitterBefore(int32_t resume);
   void serviceJitterBuffer();
   void finishIncoming();
   void clearJitter();
@@ -200,7 +204,7 @@ class ReflectorClient {
   int32_t rxHighestIndex_ = -1;
   int32_t rxPlayIndex_ = 0;
   uint32_t rxLastMediaMs_ = 0;
-  uint32_t nextPlayoutMs_ = 0;
+  RxJitterPolicy jitterPolicy_;
   uint8_t bufferedFrames_ = 0;
   DiagnosticCounter<> droppedRxFrames_;
   DiagnosticCounter<> concealedRxFrames_;
@@ -212,7 +216,7 @@ class ReflectorClient {
   // Bounded admission pool. Data-only headers never own the speaker or evict
   // the active voice stream, even when several reflector modules interleave.
   ReceiveCandidate candidates_[4];
-  static constexpr uint8_t JITTER_SLOTS = 16;
+  static constexpr uint8_t JITTER_SLOTS = 32;
   JitterSlot jitter_[JITTER_SLOTS];
 
   RxStartCallback rxStart_ = nullptr;

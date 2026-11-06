@@ -36,7 +36,7 @@ export function statusView(status = {}, { busy = new Set(), online = false } = {
         + `parse ${count(status.reflectorMediaParseFailures)} · stream ${count(status.reflectorWrongStreamFrames)} · `
         + `no-header ${count(status.reflectorVoiceWithoutHeader)} · `
         + `RX silence: received ${count(status.rxReceivedNullFrames)}, filled ${count(status.rxConcealedFrames)} · `
-        + `jitter recoveries ${count(status.rxJitterResyncs)} · discarded fast data ${count(status.rxFastDataFrames)}, unclassified ${count(status.rxUnclassifiedFrames)}, competing voice ${count(status.rxCompetingVoiceFrames)}` : '',
+        + `jitter ${count(status.rxJitterTargetMs)} ms, refills ${count(status.rxJitterRefills)}, recoveries ${count(status.rxJitterResyncs)} · discarded fast data ${count(status.rxFastDataFrames)}, unclassified ${count(status.rxUnclassifiedFrames)}, competing voice ${count(status.rxCompetingVoiceFrames)}` : '',
     resourceStatus: diagnosticsEnabled && status.resources
       ? `${count(resources.cpuMHz)} MHz · network core ${count(resources.networkCore)}, codec core ${count(resources.codecCore)} · `
         + `free internal RAM ${kib(resources.internalFreeBytes)} KiB (largest ${kib(resources.internalLargestBytes)}) · `

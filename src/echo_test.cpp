@@ -162,7 +162,7 @@ void EchoTest::queuePlaybackFrames(uint32_t now) {
   while (playbackIndex_ < frameCount_ &&
          static_cast<int32_t>(now - nextPlaybackMs_) >= 0 && sent++ < 4) {
     const uint8_t *frame = frames_ + playbackIndex_ * DSTAR_AMBE_BYTES;
-    if (!audio_->submitReceivedFrame(frame)) break;
+    if (!audio_->submitReceivedFrame(frame, false)) break;
     playbackIndex_++;
     nextPlaybackMs_ += 20;
   }

@@ -4,7 +4,6 @@
 
 namespace {
 constexpr uint32_t STREAM_TIMEOUT_MS = 1200;
-constexpr uint8_t STARTUP_JITTER_FRAMES = 4;
 constexpr uint8_t NULL_AMBE[9] = {0x9e, 0x8d, 0x32, 0x88, 0x26,
                                   0x1a, 0x3f, 0x61, 0xe8};
 } // namespace
@@ -66,8 +65,6 @@ void ReflectorClient::acceptFrame(const uint8_t *frame, uint16_t streamId,
     candidate->used = false;
     if (rxActive_ && streamId == rxStreamId_) {
       rxEndPending_ = true;
-      if (!nextPlayoutMs_)
-        nextPlayoutMs_ = millis();
     }
     return;
   }
@@ -97,7 +94,9 @@ void ReflectorClient::serviceIncomingStreams() {
 
 void ReflectorClient::drainCandidate(ReceiveCandidate &candidate, bool ending) {
   DStarReceiveFilter::Block block;
-  while (candidate.filter.pop(millis(), block, ending))
+  const uint32_t reorderWaitMs = rxActive_ && candidate.stream == rxStreamId_
+      ? jitterPolicy_.targetFrames() * 20U : 60U;
+  while (candidate.filter.pop(millis(), block, ending, reorderWaitMs))
     acceptBlock(candidate, block);
 }
 
@@ -110,8 +109,6 @@ void ReflectorClient::acceptBlock(const ReceiveCandidate &candidate,
       // Drain the already accepted speech tail, then release audio ownership.
       // A long image transfer must not reserve the speaker against voice.
       rxEndPending_ = true;
-      if (!nextPlayoutMs_)
-        nextPlayoutMs_ = millis();
     }
     return; // Future data destinations belong here, outside the audio path.
   }
@@ -210,62 +207,58 @@ void ReflectorClient::queueIncomingFrame(const uint8_t *ambe,
   slot.valid = true;
   slot.index = index;
   memcpy(slot.ambe, ambe, 9);
-  if (nextPlayoutMs_ == 0 && bufferedFrames_ >= STARTUP_JITTER_FRAMES) {
-    nextPlayoutMs_ = millis() + 20;
-  }
 }
 
-void ReflectorClient::trimJitterWindow(int32_t newestIndex) {
-  if (newestIndex - rxPlayIndex_ < JITTER_SLOTS)
-    return;
-  // A burst can lap this ring, particularly when a stream starts while HTTP
-  // or a flash write holds the main loop. Overwriting slots without moving
-  // the read cursor traps playout behind the writer: every subsequent frame
-  // is replaced by silence even though packets continue arriving normally.
-  // Drop old latency once, keep a small recent window and resume at 20 ms.
-  const int32_t resume = newestIndex - STARTUP_JITTER_FRAMES + 1;
+void ReflectorClient::discardJitterBefore(int32_t resume) {
+  if (resume <= rxPlayIndex_) return;
   droppedRxFrames_ += static_cast<uint32_t>(resume - rxPlayIndex_);
   rxPlayIndex_ = resume;
   bufferedFrames_ = 0;
   for (auto &slot : jitter_) {
-    if (slot.valid && slot.index < resume)
-      slot.valid = false;
-    if (slot.valid)
-      ++bufferedFrames_;
+    if (slot.valid && slot.index < resume) slot.valid = false;
+    if (slot.valid) ++bufferedFrames_;
   }
-  nextPlayoutMs_ = millis() + 20;
+}
+
+void ReflectorClient::trimJitterWindow(int32_t newestIndex) {
+  // Four extra slots allow for the classification filter's grouped arrivals.
+  // A long stall sheds old audio once, keeping the adaptive target near live.
+  const int32_t target = jitterPolicy_.targetFrames();
+  if (newestIndex - rxPlayIndex_ + 1 <= target + 4) return;
+  discardJitterBefore(newestIndex - target + 1);
   ++jitterResyncs_;
 }
 
 void ReflectorClient::serviceJitterBuffer() {
-  if (!rxActive_ || nextPlayoutMs_ == 0)
+  if (!rxActive_) return;
+  const uint32_t now = millis();
+  if (rxEndPending_ && rxPlayIndex_ > rxHighestIndex_) {
+    finishIncoming();
     return;
-  uint8_t serviced = 0;
-  uint32_t now = millis();
-  while (static_cast<int32_t>(now - nextPlayoutMs_) >= 0 && serviced++ < 4) {
-    JitterSlot &slot = jitter_[rxPlayIndex_ % JITTER_SLOTS];
-    if (slot.valid && slot.index == rxPlayIndex_) {
-      if (rxFrame_)
-        rxFrame_(slot.ambe, callbackContext_);
-      slot.valid = false;
-      if (bufferedFrames_)
-        bufferedFrames_--;
-    } else if (rxPlayIndex_ <= rxHighestIndex_ || rxEndPending_) {
-      if (rxFrame_)
-        rxFrame_(NULL_AMBE, callbackContext_);
-      droppedRxFrames_++;
-      ++concealedRxFrames_;
-    } else {
-      nextPlayoutMs_ = now + 20;
-      break;
-    }
-    rxPlayIndex_++;
-    nextPlayoutMs_ += 20;
-    if (rxEndPending_ && rxPlayIndex_ > rxHighestIndex_) {
-      finishIncoming();
-      break;
-    }
   }
+  if (!jitterPolicy_.ready(now, bufferedFrames_, rxEndPending_)) return;
+  if (!rxEndPending_ && jitterPolicy_.relax(now) &&
+      rxHighestIndex_ - rxPlayIndex_ + 1 > jitterPolicy_.targetFrames() + 1) {
+    // At most one 20 ms frame per ten stable seconds; never replay old audio
+    // or change the sample rate to reduce accumulated latency.
+    discardJitterBefore(rxPlayIndex_ + 1);
+  }
+  JitterSlot &slot = jitter_[rxPlayIndex_ % JITTER_SLOTS];
+  if (slot.valid && slot.index == rxPlayIndex_) {
+    if (rxFrame_) rxFrame_(slot.ambe, callbackContext_);
+    slot.valid = false;
+    if (bufferedFrames_) --bufferedFrames_;
+  } else if (rxPlayIndex_ <= rxHighestIndex_) {
+    // A hole with later media already buffered is packet loss, not starvation.
+    if (rxFrame_) rxFrame_(NULL_AMBE, callbackContext_);
+    ++droppedRxFrames_;
+    ++concealedRxFrames_;
+  } else {
+    return;
+  }
+  ++rxPlayIndex_;
+  jitterPolicy_.played(now);
+  if (rxEndPending_ && rxPlayIndex_ > rxHighestIndex_) finishIncoming();
 }
 
 void ReflectorClient::finishIncoming() {
@@ -285,6 +278,6 @@ void ReflectorClient::clearJitter() {
   rxLastSequence_ = -1;
   rxHighestIndex_ = -1;
   rxPlayIndex_ = 0;
-  nextPlayoutMs_ = 0;
+  jitterPolicy_.reset();
   bufferedFrames_ = 0;
 }
