@@ -23,8 +23,6 @@ export function statusView(status = {}, { busy = new Set(), online = false } = {
     echoLabel: armed ? 'Cancel echo test' : 'Arm echo test',
     echoDisabled: !online || audioBusy || busy.has('rx') || (!idle && !armed) || (!armed && liveAudio),
     speakerDisabled: !online || audioBusy || busy.has('rx') || liveAudio || !idle,
-    // Recovery is an operational control, including in builds without diagnostics.
-    recoverDisabled: busy.has('rx') || audioBusy,
     snapshotDisabled: !diagnosticsEnabled || !online || busy.has('rx') || audioBusy,
     echoStatus: [text(status.echoStatus), text(status.audioError), diagnosticsEnabled && status.echoFrames
       ? `${count(status.echoFrames)} AMBE frames` : '', diagnosticsEnabled ? text(status.audioCapture) : '']
@@ -35,7 +33,7 @@ export function statusView(status = {}, { busy = new Set(), online = false } = {
         + `TX ${count(status.reflectorTxVoiceFrames)} voice (${count(status.reflectorTxUnderruns)} silence fills) · `
         + `parse ${count(status.reflectorMediaParseFailures)} · stream ${count(status.reflectorWrongStreamFrames)} · `
         + `no-header ${count(status.reflectorVoiceWithoutHeader)} · `
-        + `RX silence: received ${count(status.rxReceivedNullFrames)}, filled ${count(status.rxConcealedFrames)} · `
+        + `RX silence ${count(status.rxReceivedNullFrames)}, concealed ${count(status.rxConcealedFrames)} (starvation ${count(status.rxStarvedFrames)}) · `
         + `jitter ${count(status.rxJitterTargetMs)} ms, refills ${count(status.rxJitterRefills)}, recoveries ${count(status.rxJitterResyncs)} · discarded fast data ${count(status.rxFastDataFrames)}, unclassified ${count(status.rxUnclassifiedFrames)}, competing voice ${count(status.rxCompetingVoiceFrames)}` : '',
     resourceStatus: diagnosticsEnabled && status.resources
       ? `${count(resources.cpuMHz)} MHz · network core ${count(resources.networkCore)}, codec core ${count(resources.codecCore)} · `

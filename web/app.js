@@ -3,6 +3,8 @@ import { createPoller, pageVisibility } from './poller.js';
 import { createActionRunner, statusView } from './state.js';
 import { receiveDiagnostic, scanWifi, waitUntilVisible } from './workflows.js';
 import { initTheme } from './theme.js';
+import { initSpeakerFilters } from './speaker-filters.js';
+import { initLiveVolume } from './live-volume.js';
 
 const $ = id => document.getElementById(id);
 const api = createApi();
@@ -39,15 +41,14 @@ function renderControls() {
   $('echo').disabled = view.echoDisabled;
   $('echo').textContent = actions.busy.has('audio') ? 'Working…' : view.echoLabel;
   $('speakerTest').disabled = view.speakerDisabled;
-  $('rxRecover').disabled = view.recoverDisabled;
   $('rxSave').disabled = view.snapshotDisabled;
   $('rxSave').hidden = !view.diagnosticsEnabled;
-  $('diagnosticHelp').hidden = !view.diagnosticsEnabled;
   $('diagnosticDisabled').hidden = view.diagnosticsEnabled;
   $('diagnostics').hidden = !view.diagnosticsEnabled;
   for (const id of ['link', 'unlink']) $(id).disabled = actions.busy.has('link');
   $('search').disabled = actions.busy.has('search');
   $('stationFields').disabled = !configLoaded || actions.busy.has('config');
+  $('filterFields').disabled = !configLoaded || actions.busy.has('filters');
   $('wifiFields').disabled = !configLoaded || actions.busy.has('config');
   $('retryConfig').disabled = actions.busy.has('config');
   $('scanWifi').disabled = actions.busy.has('scan');
@@ -55,7 +56,7 @@ function renderControls() {
   $('uploadDirectory').disabled = actions.busy.has('directory');
   $('directoryFile').disabled = actions.busy.has('directory');
   $('uploadDirectory').textContent = actions.busy.has('directory') ? 'Uploading…' : 'Upload directory';
-  for (const [group, ids] of [['audio', ['echo', 'speakerTest']], ['rx', ['rxSave', 'rxRecover']],
+  for (const [group, ids] of [['audio', ['echo', 'speakerTest']], ['rx', ['rxSave']],
     ['link', ['link', 'unlink']], ['scan', ['scanWifi']], ['directory', ['uploadDirectory']]]) {
     for (const id of ids) $(id).setAttribute('aria-busy', String(actions.busy.has(group)));
   }
@@ -136,6 +137,9 @@ $('volume').addEventListener('input', showLevels);
 $('micGain').addEventListener('input', showLevels);
 $('open').addEventListener('change', () => { $('password').disabled = $('open').checked; });
 
+const volumeControl = initLiveVolume({ $, api, formBody, signal: lifecycle.signal });
+const filterControls = initSpeakerFilters({ $, api, formBody, signal: lifecycle.signal, runAction, toast });
+
 async function loadConfig() {
   await runAction('config', async () => {
     try {
@@ -145,6 +149,8 @@ async function loadConfig() {
         timeout: 'txTimeoutSec', volume: 'speakerVolume', micGain: 'micGain', ssid: 'wifiSsid' })) {
         $(id).value = config[key] ?? '';
       }
+      filterControls.load({ enabled: config.speakerFiltersEnabled === true,
+        lowCutHz: config.speakerLowCutHz ?? 200, highCutHz: config.speakerHighCutHz ?? 3200, slopeDb: config.speakerFilterSlopeDb ?? 6 });
       $('open').checked = config.wifiOpen === true;
       $('password').disabled = $('open').checked;
       $('reflector').value = config.defaultReflector || 'REF001';
@@ -220,16 +226,16 @@ function saveBlob(blob) {
   anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
-function rxDiagnostic(recover) {
+function rxDiagnostic() {
   const view = currentView();
-  if (recover ? view.recoverDisabled : view.snapshotDisabled) return;
+  if (view.snapshotDisabled) return;
   runAction('rx', async () => {
     try {
-      const blob = await receiveDiagnostic(api, { recover, signal: lifecycle.signal, beforePoll,
+      const blob = await receiveDiagnostic(api, { signal: lifecycle.signal, beforePoll,
         diagnosticsEnabled: () => online && lastStatus.diagnosticsEnabled === true,
         onProgress: message => { $('rxStatus').textContent = message; },
       });
-      const message = blob ? 'RX diagnostic downloaded.' : recover ? 'Receive restart requested.' : 'RX diagnostics are disabled.';
+      const message = blob ? 'RX diagnostic downloaded.' : 'RX diagnostics are disabled.';
       if (blob && online && lastStatus.diagnosticsEnabled === true) saveBlob(blob);
       $('rxStatus').textContent = message;
       toast(message);
@@ -239,8 +245,7 @@ function rxDiagnostic(recover) {
     } finally { refreshAfterAction(); }
   });
 }
-$('rxSave').addEventListener('click', () => rxDiagnostic(false));
-$('rxRecover').addEventListener('click', () => rxDiagnostic(true));
+$('rxSave').addEventListener('click', rxDiagnostic);
 
 $('scanWifi').addEventListener('click', () => runAction('scan', async () => {
   $('scanStatus').textContent = 'Scanning for networks…';
@@ -271,6 +276,7 @@ $('directoryForm').addEventListener('submit', event => {
 $('stationForm').addEventListener('submit', event => {
   event.preventDefault();
   runAction('config', async () => {
+    await volumeControl.flush(); // Older previews must finish before saving the newest level.
     const values = { callsign: $('callsign').value, localModule: $('localModule').value, mySuffix: $('suffix').value,
       defaultReflector: $('defaultReflector').value, defaultModule: $('defaultModule').value,
       startupMode: $('startup').value, txTimeoutSec: $('timeout').value, speakerVolume: $('volume').value, micGain: $('micGain').value };

@@ -8,6 +8,7 @@
 
 #include "dstar_codec.h"
 #include "pcm_capture_buffer.h"
+#include "speaker_filters.h"
 #include "voice_s3r_audio.h"
 #include "build_features.h"
 #include "diagnostic_counter.h"
@@ -19,6 +20,18 @@ class AudioEngine {
  public:
   bool begin(uint8_t speakerVolume, float micGain);
   void setLevels(uint8_t speakerVolume, float micGain);
+  String speakerFilterStatus() const;
+  // Publish only the speaker level; live preview must not change microphone gain.
+  void setSpeakerVolume(uint8_t volume) {
+    speakerVolume_.store(volume);
+    wakeWorker();
+  }
+  void setSpeakerFilters(const SpeakerFilterSettings& value) {
+    if (value.valid()) {
+      speakerFilterSettings_.store(value.packed());
+      wakeWorker();
+    }
+  }
 
   // Echo preserves the whole bounded recording; live TX bounds latency.
   bool startTransmit(bool echoCapture = false);
@@ -35,7 +48,11 @@ class AudioEngine {
   String playbackDiagnostic() const;
   String errorText() const;
 #if REFLECTORMIC_DIAGNOSTICS
-  bool requestRxSnapshot() { return rxTrace_.request(); }
+  bool requestRxSnapshot() {
+    if (!rxTrace_.request()) return false;
+    wakeWorker();
+    return true;
+  }
   const RxTraceSnapshot* rxSnapshot() const { return rxTrace_.snapshot(); }
 #endif
   bool requestRxRecovery();
@@ -78,6 +95,8 @@ class AudioEngine {
   static void captureTaskEntry(void *arg);
   void captureTaskLoop();
   void taskLoop();
+  void wakeWorker();
+  void waitForIdleWork();
   void warmCodec();
 #if REFLECTORMIC_DIAGNOSTICS
   void runCodecTest();
@@ -98,6 +117,11 @@ class AudioEngine {
   void flushPlaybackChunk(bool pad);
   void serviceRxDiagnostics();
 
+  // HTTP publishes one coherent settings word. Only the audio worker owns
+  // filter history and modifies PCM, before the mixer can retain its pointer.
+  std::atomic<uint32_t> speakerFilterSettings_{SpeakerFilterSettings{}.packed()};
+  std::atomic<uint32_t> speakerFilterApplied_{UINT32_MAX};
+  SpeakerFilters speakerFilters_;
   DStarCodec codec_;
 #if REFLECTORMIC_DIAGNOSTICS
   RxAudioTrace rxTrace_;
@@ -127,6 +151,7 @@ class AudioEngine {
   QueueHandle_t rxQueue_ = nullptr;
   QueueHandle_t txQueue_ = nullptr;
   TaskHandle_t task_ = nullptr;
+  DiagnosticCounter<> idleWaits_, idleWakeups_;
   TaskHandle_t captureTask_ = nullptr;
   CapturedPcm *captureStorage_ = nullptr;
   PcmCaptureBuffer captureBuffer_;

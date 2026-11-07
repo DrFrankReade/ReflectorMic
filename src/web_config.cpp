@@ -12,6 +12,10 @@ void ReflectorMicWebServer::sendConfig() {
   out += "\"txTimeoutSec\":" + String(c.txTimeoutSec) + ',';
   out += "\"speakerVolume\":" + String(c.speakerVolume) + ',';
   out += "\"micGain\":" + String(c.micGain, 2) + ',';
+  out += "\"speakerFiltersEnabled\":" + String(c.speakerFilters.enabled ? "true" : "false") + ',';
+  out += "\"speakerLowCutHz\":" + String(c.speakerFilters.lowCutHz) + ',';
+  out += "\"speakerFilterSlopeDb\":" + String(c.speakerFilters.slopeDb) + ',';
+  out += "\"speakerHighCutHz\":" + String(c.speakerFilters.highCutHz) + ',';
   out += "\"wifiSsid\":" + json(c.wifiSsid) + ',';
   out += "\"wifiOpen\":" + String(c.wifiOpen ? "true" : "false");
   out += '}';

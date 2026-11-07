@@ -1,4 +1,5 @@
 #include "dstar_header.h"
+#include "dstar_rx_loss.h"
 #include "reflector_client.h"
 #include <cstring>
 
@@ -112,8 +113,23 @@ void ReflectorClient::acceptBlock(const ReceiveCandidate &candidate,
     }
     return; // Future data destinations belong here, outside the audio path.
   }
-  if (block.kind == Kind::Unknown)
-    unclassifiedFrames_ += block.count;
+  if (block.kind == Kind::Unknown) {
+    // Count received payloads separately from absent time slots. Losing one
+    // mini-header previously looked like discarding two or three received
+    // packets, even when only one packet was actually available.
+    unsigned received = 0;
+    for (uint8_t i = 0; i < block.count; ++i)
+      received += (block.present >> i) & 1U;
+    unclassifiedFrames_ += received;
+    unclassifiedMissingSlots_ += block.count - received;
+    using Reason = DStarReceiveFilter::Reason;
+    switch (block.reason) {
+    case Reason::MissingMarker: unknownMissingMarkerFrames_ += received; break;
+    case Reason::InvalidMarker: unknownInvalidMarkerFrames_ += received; break;
+    case Reason::SyncMismatch: unknownSyncMismatchFrames_ += received; break;
+    case Reason::None: break;
+    }
+  }
   if (rxActive_ && candidate.stream != rxStreamId_) {
     if (block.kind == Kind::Voice)
       competingVoiceFrames_ += block.count;
@@ -236,7 +252,18 @@ void ReflectorClient::serviceJitterBuffer() {
     finishIncoming();
     return;
   }
-  if (!jitterPolicy_.ready(now, bufferedFrames_, rxEndPending_)) return;
+  if (!jitterPolicy_.ready(now, bufferedFrames_, rxEndPending_)) {
+    if (!rxEndPending_ && jitterPolicy_.concealReady(now)) {
+      if (rxFrame_) rxFrame_(dstar::RX_LOST_AMBE, callbackContext_);
+      ++concealedRxFrames_;
+      ++starvedRxFrames_;
+      // This 20 ms slot has now played. Late arrivals for it must not be
+      // replayed after refill, or each outage would add permanent latency.
+      discardJitterBefore(rxPlayIndex_ + 1);
+      jitterPolicy_.concealed(now);
+    }
+    return;
+  }
   if (!rxEndPending_ && jitterPolicy_.relax(now) &&
       rxHighestIndex_ - rxPlayIndex_ + 1 > jitterPolicy_.targetFrames() + 1) {
     // At most one 20 ms frame per ten stable seconds; never replay old audio
@@ -250,7 +277,7 @@ void ReflectorClient::serviceJitterBuffer() {
     if (bufferedFrames_) --bufferedFrames_;
   } else if (rxPlayIndex_ <= rxHighestIndex_) {
     // A hole with later media already buffered is packet loss, not starvation.
-    if (rxFrame_) rxFrame_(NULL_AMBE, callbackContext_);
+    if (rxFrame_) rxFrame_(dstar::RX_LOST_AMBE, callbackContext_);
     ++droppedRxFrames_;
     ++concealedRxFrames_;
   } else {

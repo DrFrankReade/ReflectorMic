@@ -31,6 +31,7 @@ void AudioEngine::taskLoop() {
     serviceSpeakerShutdown();
     // Even a backlogged worker must give Wi-Fi and the idle task CPU time.
     vTaskDelay(1);
+    waitForIdleWork();
   }
 }
 
@@ -60,6 +61,7 @@ void AudioEngine::processReceiveItem(const RxItem& item) {
     speakerIdleSinceMs_ = 0;
     flushPlaybackChunk(true);
     codec_.resetDecoder();
+    speakerFilters_.reset();
 #if REFLECTORMIC_DIAGNOSTICS
     ++rxTraceStream_;
     rxTraceFrame_ = 0;
@@ -99,6 +101,9 @@ void AudioEngine::decodeReceivedFrame(const RxItem& item) {
   const bool decoded = codec_.decode(item.ambe, dest);
 #endif
   if (!decoded) { ++decodeFailures_; return; }
+  const uint32_t filterSettings = speakerFilterSettings_.load();
+  speakerFilters_.process(dest, DSTAR_PCM_SAMPLES, filterSettings);
+  if (speakerFilterApplied_.load() != filterSettings) speakerFilterApplied_.store(filterSettings);
   ++decodedFrames_;
   if (++playbackFrames_ == PLAYBACK_CHUNK_FRAMES) flushPlaybackChunk(false);
 }
@@ -172,6 +177,7 @@ bool AudioEngine::requestRxRecovery() {
   rxTrace_.request();
 #endif
   rxRecoveryRequested_ = true;
+  wakeWorker();
   return true;
 }
 
@@ -186,6 +192,7 @@ void AudioEngine::serviceRxDiagnostics() {
   speakerShutdownPending_ = false;
   playbackFrames_ = 0;
   codec_.resetDecoder();
+  speakerFilters_.reset();
 #if REFLECTORMIC_DIAGNOSTICS
   ++rxTraceStream_;
   rxTraceFrame_ = 0;

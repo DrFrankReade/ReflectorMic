@@ -13,6 +13,7 @@ void ReflectorMicWebServer::sendStatus() {
   out += "\"diagnosticsEnabled\":" +
          String(REFLECTORMIC_DIAGNOSTICS ? "true" : "false") + ',';
   appendConnectionStatus(out);
+  out += "\"speakerFilterStatus\":" + json(audio_->speakerFilterStatus()) + ',';
   out += "\"audioError\":" + json(audio_->errorText()) + ',';
 #if REFLECTORMIC_DIAGNOSTICS
   appendAudioDiagnostics(out);
@@ -55,12 +56,17 @@ void ReflectorMicWebServer::appendReflectorCounters(String &out) const {
   out += "\"reconnects\":" + String(reflector_->reconnectCount()) + ',';
   out += "\"rxDrops\":" + String(reflector_->droppedRxFrames()) + ',';
   out += "\"rxConcealedFrames\":" + String(reflector_->concealedRxFrames()) + ',';
+  out += "\"rxStarvedFrames\":" + String(reflector_->starvedRxFrames()) + ',';
   out += "\"rxReceivedNullFrames\":" + String(reflector_->receivedNullFrames()) + ',';
   out += "\"rxJitterTargetMs\":" + String(reflector_->jitterTargetMs()) + ',';
   out += "\"rxJitterRefills\":" + String(reflector_->jitterRefills()) + ',';
   out += "\"rxJitterResyncs\":" + String(reflector_->jitterResyncs()) + ',';
   out += "\"rxFastDataFrames\":" + String(reflector_->fastDataFrames()) + ',';
   out += "\"rxUnclassifiedFrames\":" + String(reflector_->unclassifiedFrames()) + ',';
+  out += "\"rxUnknownMissingMarkerFrames\":" + String(reflector_->unknownMissingMarkerFrames()) + ',';
+  out += "\"rxUnknownInvalidMarkerFrames\":" + String(reflector_->unknownInvalidMarkerFrames()) + ',';
+  out += "\"rxUnknownSyncMismatchFrames\":" + String(reflector_->unknownSyncMismatchFrames()) + ',';
+  out += "\"rxUnclassifiedMissingSlots\":" + String(reflector_->unclassifiedMissingSlots()) + ',';
   out += "\"rxCompetingVoiceFrames\":" + String(reflector_->competingVoiceFrames()) + ',';
   out += "\"reflectorRxPackets\":" + String(reflector_->receivedPackets()) + ',';
   out += "\"reflectorRxPolls\":" + String(reflector_->receivedPolls()) + ',';

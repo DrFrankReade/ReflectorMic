@@ -128,6 +128,15 @@ bool VoiceS3rAudioHardware::startSpeaker(uint8_t volume) {
     stopSpeaker();
     return false;
   }
+  // ES8311 User Guide 11.2: 0.25 dB per four LRCK periods (~0.33 ms/dB
+  // at 48 kHz) smooths slider changes entirely inside the DAC. Enable it
+  // AFTER the initial gain is applied, so startup does not fade in from
+  // -95.5 dB over the first speech samples. Bit 3 keeps the EQ bypassed.
+  if (!writeVerifiedRegister(0x37, 0x18)) {
+    fail("ES8311 speaker volume ramp verification failed");
+    stopSpeaker();
+    return false;
+  }
   M5.Speaker.setVolume(255);
   // Allow the hardware DAC to settle on zero PCM before any audible data.
   vTaskDelay(pdMS_TO_TICKS(20));
@@ -302,11 +311,13 @@ bool VoiceS3rAudioHardware::configureSpeakerCodec() {
   // restore I2C registers, so restore all relevant clock and DAC controls.
   // 0x32=0xBF is 0 dB; 0xFF (the former setting) is +32 dB, NOT unity.
   // Start at minimum gain, then apply the slider while the amplifier is off.
+  // Restore normal analog quality (0x0F=0), not the reduced-bias low-power
+  // modes. Keep the volume ramp off until the initial gain has been set.
   static constexpr uint8_t registers[][2] = {
       {0x01, 0x35}, {0x02, 0x00}, {0x03, 0x10}, {0x04, 0x10},
       {0x05, 0x00}, {0x06, 0x03}, {0x07, 0x00}, {0x08, 0xFF},
       {0x09, 0x0C}, {0x31, 0x00}, {0x32, 0x00}, {0x34, 0x00},
-      {0x37, 0x08}, {0x44, 0x00}, {0x12, 0x00}, {0x13, 0x10},
+      {0x37, 0x08}, {0x44, 0x00}, {0x0F, 0x00}, {0x12, 0x00}, {0x13, 0x10},
       {0x0D, 0x01}, {0x00, 0x80},
   };
   for (const auto &item : registers) {

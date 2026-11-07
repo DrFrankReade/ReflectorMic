@@ -63,12 +63,17 @@ class ReflectorClient {
   uint32_t reconnectCount() const { return reconnectCount_; }
   uint32_t droppedRxFrames() const { return droppedRxFrames_; }
   uint32_t concealedRxFrames() const { return concealedRxFrames_; }
+  uint32_t starvedRxFrames() const { return starvedRxFrames_; }
   uint32_t receivedNullFrames() const { return receivedNullFrames_; }
   uint32_t jitterTargetMs() const { return jitterPolicy_.targetFrames() * 20U; }
   uint32_t jitterRefills() const { return jitterPolicy_.refills(); }
   uint32_t jitterResyncs() const { return jitterResyncs_; }
   uint32_t fastDataFrames() const { return fastDataFrames_; }
   uint32_t unclassifiedFrames() const { return unclassifiedFrames_; }
+  uint32_t unknownMissingMarkerFrames() const { return unknownMissingMarkerFrames_; }
+  uint32_t unknownInvalidMarkerFrames() const { return unknownInvalidMarkerFrames_; }
+  uint32_t unknownSyncMismatchFrames() const { return unknownSyncMismatchFrames_; }
+  uint32_t unclassifiedMissingSlots() const { return unclassifiedMissingSlots_; }
   uint32_t competingVoiceFrames() const { return competingVoiceFrames_; }
   uint32_t receivedPackets() const { return receivedPackets_; }
   uint32_t receivedPolls() const { return receivedPolls_; }
@@ -208,10 +213,15 @@ class ReflectorClient {
   uint8_t bufferedFrames_ = 0;
   DiagnosticCounter<> droppedRxFrames_;
   DiagnosticCounter<> concealedRxFrames_;
+  DiagnosticCounter<> starvedRxFrames_;
   DiagnosticCounter<> receivedNullFrames_;
   DiagnosticCounter<> jitterResyncs_;
   DiagnosticCounter<> fastDataFrames_;
   DiagnosticCounter<> unclassifiedFrames_;
+  DiagnosticCounter<> unknownMissingMarkerFrames_;
+  DiagnosticCounter<> unknownInvalidMarkerFrames_;
+  DiagnosticCounter<> unknownSyncMismatchFrames_;
+  DiagnosticCounter<> unclassifiedMissingSlots_;
   DiagnosticCounter<> competingVoiceFrames_;
   // Bounded admission pool. Data-only headers never own the speaker or evict
   // the active voice stream, even when several reflector modules interleave.

@@ -23,6 +23,8 @@ void ReflectorMicWebServer::routeRequests() {
 }
 
 void ReflectorMicWebServer::routeAudioRequests() {
+  server_.on("/api/audio/volume", HTTP_POST, [this]() { setSpeakerVolume(); });
+  server_.on("/api/audio/filters", HTTP_POST, [this]() { setSpeakerFilters(); });
   server_.on("/api/echo/arm", HTTP_POST, [this]() { armEcho(); });
   server_.on("/api/echo/cancel", HTTP_POST, [this]() { cancelEcho(); });
   server_.on("/api/audio/speaker-test", HTTP_POST, [this]() { testSpeaker(); });

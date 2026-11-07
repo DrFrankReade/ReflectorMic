@@ -63,6 +63,8 @@ bool ConfigStore::begin() {
   config_.wifiSsid = prefs_.getString("ssid", "");
   config_.wifiPassword = prefs_.getString("wifipass", "");
   config_.wifiOpen = prefs_.getBool("wifiopen", false);
+  config_.speakerFilters = SpeakerFilterSettings::unpack(
+      prefs_.getUInt("spkfilters", SpeakerFilterSettings{}.packed()));
   normalize();
   return true;
 }
@@ -83,6 +85,7 @@ void ConfigStore::normalize() {
                                    static_cast<uint16_t>(600));
   config_.speakerVolume = constrain(config_.speakerVolume, static_cast<uint8_t>(8),
                                     static_cast<uint8_t>(255));
+  if (!config_.speakerFilters.valid()) config_.speakerFilters = {};
   config_.micGain = constrain(config_.micGain, 0.25f, 4.0f);
   config_.wifiSsid = config_.wifiSsid.substring(0, 32);
   config_.wifiPassword = config_.wifiPassword.substring(0, 64);
@@ -126,4 +129,12 @@ void ConfigStore::clearWifi() {
   config_.wifiPassword = "";
   config_.wifiOpen = false;
   save();
+}
+
+// A single NVS key keeps the three filter settings consistent across resets.
+bool ConfigStore::saveSpeakerFilters(const SpeakerFilterSettings& filters) {
+  if (!filters.valid() || prefs_.putUInt("spkfilters", filters.packed()) != sizeof(uint32_t))
+    return false;
+  config_.speakerFilters = filters;
+  return true;
 }

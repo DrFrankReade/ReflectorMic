@@ -235,6 +235,7 @@ void setup() {
 
   const bool audioReady =
       audio.begin(configStore.get().speakerVolume, configStore.get().micGain);
+  audio.setSpeakerFilters(configStore.get().speakerFilters);
   bootBeepPending = audioReady;
   if (!audioReady) {
     Serial.printf("[audio] initialization failed: %s\n",

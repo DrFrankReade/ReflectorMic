@@ -39,13 +39,26 @@
         <form id="stationForm"><fieldset id="stationFields" disabled><legend class="sr-only">Station and audio settings</legend>
           <div class="two"><div><label for="callsign">Licensed callsign</label><input id="callsign" maxlength="7" placeholder="N0CALL" required autocapitalize="characters" spellcheck="false"><label for="localModule">Local module</label><select id="localModule"></select><label for="suffix">MYCALL suffix</label><input id="suffix" maxlength="4" autocapitalize="characters" spellcheck="false"></div><div><label for="defaultReflector">Default reflector</label><input id="defaultReflector" maxlength="6" pattern="([Rr][Ee][Ff]|[Xx][Rr][Ff]|[Dd][Cc][Ss]|[Xx][Ll][Xx])[0-9A-Za-z]{3}" required autocapitalize="characters" spellcheck="false"><label for="defaultModule">Default module</label><select id="defaultModule"></select><label for="startup">Power-up linking</label><select id="startup"><option value="last">Last successful</option><option value="default">Configured default</option><option value="manual">Manual only</option></select></div></div>
           <label for="timeout">PTT timeout (seconds)</label><input id="timeout" type="number" min="15" max="600" step="1" required inputmode="numeric">
-          <div class="two"><div><label for="volume">Speaker gain <output id="volumeValue" for="volume">160</output></label><input id="volume" type="range" min="8" max="255" step="1" value="160"></div><div><label for="micGain">Microphone gain <output id="micGainValue" for="micGain">1.00×</output></label><input id="micGain" type="range" min="0.25" max="4" step="0.05" value="1"></div></div>
+          <div class="two"><div><label for="volume">Speaker gain <output id="volumeValue" for="volume">160</output></label><input id="volume" aria-describedby="volumeStatus" type="range" min="8" max="255" step="1" value="160"><p id="volumeStatus" class="note" role="status">Volume changes apply live. Save settings to keep the level after restart.</p></div><div><label for="micGain">Microphone gain <output id="micGainValue" for="micGain">1.00×</output></label><input id="micGain" type="range" min="0.25" max="4" step="0.05" value="1"></div></div>
           <div class="actions"><button id="saveStation" type="submit">Save settings</button></div>
         </fieldset></form>
       </section>
       <details id="setupDiagnostics" class="setup wide">
         <summary>Setup &amp; Diagnostics</summary>
         <div class="grid setup-content">
+      <section class="card wide" aria-labelledby="filterHeading">
+        <h2 id="filterHeading">Speaker filtering</h2>
+        <form id="filterForm"><fieldset id="filterFields" disabled><legend class="sr-only">Speaker filters</legend>
+          <label for="filterSlope">Filter slope</label><select id="filterSlope"><option value="6">6 dB/octave</option><option value="12">12 dB/octave</option></select>
+          <label for="filterBypass" class="check"><input id="filterBypass" type="checkbox" checked> Bypass filters</label>
+          <div class="two">
+            <div><label for="lowCut">Low-cut frequency <output id="lowCutValue" for="lowCut">200 Hz</output></label><input id="lowCut" type="range" min="50" max="800" step="10" value="200"></div>
+            <div><label for="highCut">High-cut frequency <output id="highCutValue" for="highCut">3200 Hz</output></label><input id="highCut" type="range" min="1000" max="3800" step="50" value="3200"></div>
+          </div>
+          <div class="actions"><button type="submit">Save settings</button><button id="filterReset" type="button" class="secondary">Reset to defaults</button></div>
+        </fieldset></form>
+        <p id="filterStatus" class="note" role="status"></p>
+      </section>
       <section class="card wide" aria-labelledby="echoHeading">
         <h2 id="echoHeading">Local echo test</h2>
         <p id="echoStatus" class="note" role="status">Loading…</p>
@@ -53,11 +66,9 @@
         <p class="note">Arm the test, then hold PTT to record. Release PTT to finish encoding and hear the recording through the speaker.</p>
       </section>
       <section class="card wide" aria-labelledby="rxHeading">
-        <h2 id="rxHeading">Receive troubleshooting</h2>
-        <p class="note">Restart receive audio if playback gets stuck or static appears. This briefly interrupts playback while keeping the reflector linked.</p>
-        <p id="diagnosticHelp" class="note" hidden>Diagnostics are enabled. Save the last 2.56 seconds of received data and decoded audio. Restarting receive audio also saves this recording.</p>
+        <h2 id="rxHeading">Receive diagnostics</h2>
         <p id="diagnosticDisabled" class="note">RX recording is available when device diagnostics are enabled.</p>
-        <div class="actions"><button id="rxRecover" type="button" class="secondary">Restart receive audio</button><button id="rxSave" type="button" class="secondary" hidden disabled>Save RX diagnostic</button></div>
+        <div class="actions"><button id="rxSave" type="button" class="secondary" hidden disabled>Save RX diagnostic</button></div>
         <p id="rxStatus" class="note" role="status"></p>
         <details id="diagnostics" hidden><summary>Detailed diagnostics</summary><p id="reflectorMedia" class="note"></p><p id="audioPlayback" class="note"></p><p id="codecPerformance" class="note"></p><p id="audioHardware" class="note"></p><p id="resetDiagnostic" class="note"></p><p id="resourceStatus" class="note"></p></details>
       </section>

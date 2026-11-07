@@ -58,6 +58,7 @@ void AudioEngine::setLevels(uint8_t speakerVolume, float micGain) {
   micGain_ = micGain;
   // The audio worker applies ES8311 gain. Never do I2C or change mixer state
   // on the HTTP task, including while a cold-start silence barrier is active.
+  wakeWorker();
 }
 
 bool AudioEngine::startTransmit(bool echoCapture) {
@@ -89,6 +90,7 @@ bool AudioEngine::startTransmit(bool echoCapture) {
   // Publish the request after all state is initialized.
   txRequested_ = true;
   captureBusy_ = true;  // Also covers PTT released before the worker starts.
+  wakeWorker();
   return true;
 }
 
@@ -134,6 +136,8 @@ String AudioEngine::playbackDiagnostic() const {
          ", muted " + String(rxMutedFrames_) +
          ", repeated " + String(rxRepeatedFrames_) +
          ", RX restarts " + String(rxRecoveries_.load());
+  out += ", idle waits/wakes " + String(uint32_t(idleWaits_)) + "/" +
+         String(uint32_t(idleWakeups_));
   if (playbackFailures_) out += ", speaker errors " + String(playbackFailures_);
   out += hardware_.amplifierEnabled() ? ", amp on" : ", amp off";
   return out;
@@ -155,6 +159,7 @@ String AudioEngine::errorText() const {
 
 void AudioEngine::stopTransmit() {
   txRequested_ = false;
+  wakeWorker();
 }
 
 bool AudioEngine::popEncodedFrame(uint8_t *ambe) {
@@ -182,6 +187,7 @@ void AudioEngine::beginReceiveStream() {
   item.type = RxItemType::Start;
   xQueueSend(rxQueue_, &item, 0);
   rxStreamActive_ = true;
+  wakeWorker();
 }
 
 bool AudioEngine::submitReceivedFrame(const uint8_t *ambe, bool live) {
@@ -193,6 +199,7 @@ bool AudioEngine::submitReceivedFrame(const uint8_t *ambe, bool live) {
   memcpy(item.ambe, ambe, sizeof(item.ambe));
   if (xQueueSend(rxQueue_, &item, 0) == pdTRUE) {
     receivedFrames_++;
+    wakeWorker();
     return true;
   }
   receivedQueueDrops_++;
@@ -205,6 +212,7 @@ bool AudioEngine::endReceiveStream() {
   // This flag is consumed only after the FIFO becomes empty, so stream end
   // cannot be lost merely because the receive queue was momentarily full.
   rxEndRequested_ = true;
+  wakeWorker();
   return true;
 }
 
@@ -212,6 +220,7 @@ bool AudioEngine::playSpeakerTestTone() {
   if (!task_ || !rxQueue_ || codecTestBusy() || txRequested_ || captureBusy_ ||
       playbackBusy()) return false;
   toneRequested_ = true;
+  wakeWorker();
   return true;
 }
 
@@ -279,4 +288,16 @@ bool AudioEngine::switchToSpeaker() {
   RuntimeDiagnostics::mark(RuntimeStage::SpeakerActive);
   Serial.println("[audio] speaker active");
   return true;
+}
+
+String AudioEngine::speakerFilterStatus() const {
+  const uint32_t requested = speakerFilterSettings_.load();
+  const auto settings = SpeakerFilterSettings::unpack(requested);
+  String text = settings.enabled
+      ? String("Filters on: ") + String(settings.lowCutHz) + " Hz low-cut / " +
+            String(settings.highCutHz) + " Hz high-cut, " + String(settings.slopeDb) + " dB/octave"
+      : String("Filters bypassed");
+  text += speakerFilterApplied_.load() == requested
+      ? " (applied to speech)" : " (waiting for speech)";
+  return text;
 }

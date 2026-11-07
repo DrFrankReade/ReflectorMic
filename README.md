@@ -10,9 +10,11 @@ A small D-Star voice terminal with a microphone, a speaker, and push-to-talk. Re
 
 ReflectorMic supports **REF (D-Plus), XRF (DExtra), DCS, and XLX through its DCS interface**. Reflector selection and settings are controlled through a local web interface. The speaker is predictably terrible because of its size. Voice is best effort; occasional audio gaps are possible. Other stations say it sounds great however.
 
+Current release: **2026-11-06.9** — stability improvements, reduced idle activity for power saving, and packet loss concealment for smoother reception.
+
 ## Install ready-to-flash firmware
 
-Download **ReflectorMic-2026-11-01.2-factory.bin** from the [latest GitHub release](https://github.com/DrFrankReade/ReflectorMic/releases/latest). This combined image includes the bootloader, partition table, and application. No compilation is required. Use it only with the **M5Stack Atom VoiceS3R**.
+Download **ReflectorMic-2026-11-06.9-factory.bin** from the [latest GitHub release](https://github.com/DrFrankReade/ReflectorMic/releases/latest). This combined image includes the bootloader, partition table, and application. No compilation is required. Use it only with the **M5Stack Atom VoiceS3R**.
 
 1. Connect the device to your computer using a USB data cable. Close other applications that are using its serial connection.
 2. Enter download mode: hold the side reset button for about two seconds until the internal green light appears, then release it. See [M5Stack's download-mode instructions](https://docs.m5stack.com/en/core/Atom_VoiceS3R).
@@ -25,7 +27,7 @@ If connection fails, re-enter download mode, reconnect the browser, and check th
 
 [ESPHome Web](https://web.esphome.io/) is another browser flasher to consider: connect, choose **Install**, and select the combined **factory.bin** image. Do not choose an option that installs ESPHome's own firmware. These are third-party tools; browser and board compatibility can vary. [ESP Web Tools](https://esphome.github.io/esp-web-tools/) is also suitable for building a dedicated installer, but its demonstration installer is not a ReflectorMic installer.
 
-The release also provides **ReflectorMic-2026-11-01.2-app.bin** for experienced users updating the existing ReflectorMic application at **`0x10000`** with the same partition layout. It is not a complete first-install image and must not be flashed at `0x0`. SHA-256 checksums are included with the downloads.
+The release also provides **ReflectorMic-2026-11-06.9-app.bin** for experienced users updating the existing ReflectorMic application at **`0x10000`** with the same partition layout. It is not a complete first-install image and must not be flashed at `0x0`. SHA-256 checksums are included with the downloads.
 
 ## First-time setup
 
@@ -64,7 +66,7 @@ Repeat these steps with a fresh download when you want to update reflector addre
 
 - **Hold the front PTT button to talk; release it to listen.** ReflectorMic receives while it is not transmitting.
 - Transmission ends automatically at the configured **PTT timeout**, which defaults to **180 seconds**. After a timeout, release PTT before starting again.
-- Adjust the **Speaker gain** and **Microphone gain** sliders in **Station and audio**, then press **Save settings**.
+- Adjust the **Speaker gain** and **Microphone gain** sliders in **Station and audio**. Speaker gain previews live; press **Save settings** to keep your choices.
 - Use **Reflector control** to change reflector or module. **Unlink** disconnects the current reflector.
 - Choose **Last successful**, **Configured default**, or **Manual only** under **Power-up linking** to control startup behavior.
 
@@ -74,7 +76,7 @@ The first active voice stream takes priority. Fast data, images, DPRS, and text 
 
 ## Local echo test
 
-Open **Setup & Diagnostics â†’ Local echo test** and select **Arm echo test**.
+Open **Setup & Diagnostics > Local echo test** and select **Arm echo test**.
 
 Arm the test, then hold PTT to record. Release PTT to finish encoding and hear the recording through the speaker.
 
@@ -84,9 +86,8 @@ Recordings are limited to **10 seconds**. Wait for processing and playback to fi
 
 ## Basic troubleshooting
 
-**Live status** shows the connection state, firmware build, and codec version. Under **Setup & Diagnostics â†’ Receive troubleshooting**:
+**Live status** shows the connection state, firmware build, and codec version. Under **Setup & Diagnostics > Receive troubleshooting**:
 
-- **Restart receive audio** restarts playback while keeping the reflector linked.
 - **Save RX diagnostic**, when available, saves a short receive capture for troubleshooting. Captures can contain received speech and station information; review them before sharing.
 
 For missing audio, check the link status and gain settings, then try the local echo test.
@@ -96,3 +97,11 @@ For missing audio, check the link status and gain settings, then try the local e
 ReflectorMic is licensed under **[GNU GPL version 3 or later](LICENSE)**. You may use, modify, and redistribute it. Distributed derivative works must remain under the GPL and provide their corresponding source as the license requires.
 
 Third-party code retains its original notices and licenses; see **[NOTICE.md](NOTICE.md)**. The linked M5Stack product photo and trademarks are not covered by the project's software license.
+
+### Speaker filters
+
+Under **Setup & Diagnostics > Speaker filtering**, use **Low-cut** to reduce bass and rumble, and **High-cut** to soften hiss and sharpness. Adjustments preview smoothly on received speech and local echo playback. They do not affect transmitted audio or the speaker test tone.
+
+Choose **6 dB/octave** for gentle filtering or **12 dB/octave** for a steeper response. The slope applies to both filters and can be changed during playback. The 12 dB mode cascades two stages, providing about 6 dB attenuation at each individual selected cutoff.
+
+**Bypass filters** restores the unfiltered signal. **Reset to defaults** selects 200 Hz low-cut and 3,200 Hz high-cut with 6 dB/octave and bypass on. Press **Save settings** while audio is idle to retain your choices after restart; otherwise they remain a temporary preview.

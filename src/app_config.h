@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+#include "speaker_filters.h"
 
 struct AppConfig {
   String callsign = "N0CALL";
@@ -14,6 +15,7 @@ struct AppConfig {
   uint16_t txTimeoutSec = 180;
   uint8_t speakerVolume = 160;
   float micGain = 1.0f;
+  SpeakerFilterSettings speakerFilters;
 
   String wifiSsid;
   String wifiPassword;
@@ -27,6 +29,7 @@ class ConfigStore {
   const AppConfig &get() const { return config_; }
 
   bool save();
+  bool saveSpeakerFilters(const SpeakerFilterSettings& filters);
   void normalize();
 
   String lastReflector();

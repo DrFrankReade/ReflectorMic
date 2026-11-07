@@ -49,12 +49,11 @@ export async function scanWifi(api, { signal, wait = delay, beforePoll = async (
   throw new ApiError('Wi-Fi scan is still running. Try again shortly.', { code: 'timeout' });
 }
 
-export async function receiveDiagnostic(api, { recover = false, diagnosticsEnabled = () => false,
+export async function receiveDiagnostic(api, { diagnosticsEnabled = () => false,
   signal, wait = delay, beforePoll = async () => {}, onProgress = () => {}, maxAttempts = 30 } = {}) {
-  if (!recover && !diagnosticsEnabled()) throw new ApiError('RX diagnostics are disabled.');
-  await api.json(recover ? '/api/audio/rx-recover' : '/api/audio/rx-snapshot', { method: 'POST', signal });
-  onProgress(recover ? 'Receive restart requested.' : 'Preparing RX diagnostic…');
-  // Recovery must never depend on a diagnostic endpoint being compiled in.
+  if (!diagnosticsEnabled()) throw new ApiError('RX diagnostics are disabled.');
+  await api.json('/api/audio/rx-snapshot', { method: 'POST', signal });
+  onProgress('Preparing RX diagnostic...');
   if (!diagnosticsEnabled()) return null;
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     await beforePoll();

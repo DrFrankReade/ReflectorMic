@@ -45,6 +45,7 @@ bool AudioEngine::requestCodecTest() {
   if (!task_ || codecTestBusy() || txRequested_ || captureBusy_ ||
       playbackBusy()) return false;
   codecTestState_ = 1;
+  wakeWorker();
   return true;
 }
 

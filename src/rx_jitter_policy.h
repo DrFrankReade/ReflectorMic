@@ -25,7 +25,9 @@ class RxJitterPolicy {
           (available < target_ && now - waitSince_ < target_ * FRAME_MS)))
         return false;
       waiting_ = false;
-      next_ = now;
+      // Refilling must not deliver a real frame immediately after a synthetic
+      // one. Preserve the 20 ms deadline unless the clock is already overdue.
+      if (!started_ || static_cast<int32_t>(now - next_) >= 0) next_ = now;
     }
     if (static_cast<int32_t>(now - next_) < 0) return false;
     if (!available && !ending) {
@@ -38,9 +40,22 @@ class RxJitterPolicy {
     return true;
   }
 
+  // While refilling an already playing stream, bridge at most 80 ms: the
+  // codec repeats three frames, then fades/mutes on the fourth. No synthesis
+  // before first speech, and no indefinite generation during a network outage.
+  bool concealReady(uint32_t now) const {
+    return started_ && waiting_ && concealed_ < 4 &&
+           static_cast<int32_t>(now - next_) >= 0;
+  }
+  void concealed(uint32_t now) {
+    ++concealed_;
+    advanceClock(now);
+  }
+
   void played(uint32_t now) {
-    // Never deliver a burst of overdue frames into the decoder after a stall.
-    next_ = now - next_ >= FRAME_MS ? now + FRAME_MS : next_ + FRAME_MS;
+    started_ = true;
+    concealed_ = 0;
+    advanceClock(now);
   }
 
   bool relax(uint32_t now) {
@@ -52,7 +67,13 @@ class RxJitterPolicy {
   }
 
  private:
+  void advanceClock(uint32_t now) {
+    // Never deliver a burst of overdue frames into the decoder after a stall.
+    next_ = now - next_ >= FRAME_MS ? now + FRAME_MS : next_ + FRAME_MS;
+  }
+
   uint8_t target_ = 6;  // Start at 120 ms, adapt within 80–240 ms.
-  bool initialized_ = false, waiting_ = true;
+  bool initialized_ = false, waiting_ = true, started_ = false;
+  uint8_t concealed_ = 0;
   uint32_t waitSince_ = 0, next_ = 0, stableSince_ = 0, refills_ = 0;
 };

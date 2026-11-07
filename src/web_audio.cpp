@@ -74,3 +74,52 @@ void ReflectorMicWebServer::sendRxTrace() {
   server_.sendContent(reinterpret_cast<const char*>(snapshot), bytes);
 }
 #endif
+
+void ReflectorMicWebServer::setSpeakerFilters() {
+  // Reject malformed or wrapped integers before publishing any audio state.
+  auto frequency = [this](const char* key) -> uint16_t {
+    const String text = server_.arg(key);
+    if (text.isEmpty() || text.length() > 4) return 0;
+    for (size_t i = 0; i < text.length(); ++i)
+      if (text[i] < '0' || text[i] > '9') return 0;
+    return static_cast<uint16_t>(text.toInt());
+  };
+  const String enabled = server_.arg("enabled");
+  const String slope = server_.hasArg("slopeDb") ? server_.arg("slopeDb") : String("6");
+  const SpeakerFilterSettings filters{enabled == "1", frequency("lowCutHz"),
+                                     frequency("highCutHz"), uint8_t(slope == "12" ? 12 : 6)};
+  if ((enabled != "0" && enabled != "1") ||
+      (slope != "6" && slope != "12") || !filters.valid()) {
+    server_.send(400, "application/json", "{\"error\":\"Invalid speaker filter settings\"}");
+    return;
+  }
+  audio_->setSpeakerFilters(filters); // No flash, I2C, queue reset, or codec work.
+  if (server_.arg("save") == "1") {
+    if (pttPressed_ || reflector_->incoming() || reflector_->transmitting() ||
+        audio_->playbackBusy() || audio_->captureBusy() || echo_->active()) {
+      server_.send(409, "application/json", "{\"error\":\"Preview is active. Save when audio is idle.\"}");
+      return;
+    }
+    if (!store_->saveSpeakerFilters(filters)) {
+      server_.send(500, "application/json", "{\"error\":\"Preview is active, but settings could not be saved.\"}");
+      return;
+    }
+  }
+  server_.send(200, "application/json", "{\"ok\":true}");
+}
+
+void ReflectorMicWebServer::setSpeakerVolume() {
+  const String text = server_.arg("volume");
+  bool valid = !text.isEmpty() && text.length() <= 3;
+  for (size_t i = 0; i < text.length(); ++i)
+    valid &= text[i] >= '0' && text[i] <= '9';
+  const long volume = valid ? text.toInt() : -1;
+  if (volume < 8 || volume > 255) {
+    server_.send(400, "application/json", "{\"error\":\"Speaker volume must be between 8 and 255\"}");
+    return;
+  }
+  // The audio worker applies this through the DAC's verified, smoothed gain
+  // control. HTTP never writes flash or touches the active I2S/mixer state.
+  audio_->setSpeakerVolume(static_cast<uint8_t>(volume));
+  server_.send(200, "application/json", "{\"ok\":true}");
+}

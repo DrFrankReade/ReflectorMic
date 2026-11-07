@@ -45,6 +45,8 @@ class ReflectorMicWebServer {
   void armEcho();
   void cancelEcho();
   void testSpeaker();
+  void setSpeakerVolume();
+  void setSpeakerFilters();
   void recoverRx();
 #if REFLECTORMIC_DIAGNOSTICS
   void testCodec();
